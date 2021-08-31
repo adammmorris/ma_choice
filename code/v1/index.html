@@ -109,9 +109,7 @@ var welcome = {
 
 var get_id = {
 	type: 'survey-text',
-	questions: [
-	{prompt: "<b>Worker ID:</b>", name: "worker_id"}
-],
+	questions: [{prompt: "<b>Worker ID:</b>", name: "worker_id"}],
 	preamble: ["Please enter your <b>Amazon Mechanical Turk Worker ID</b> below.<br>(When you're done, press <b>'Continue'</b>; don't hit Enter.)<br><br>If you do not enter your ID accurately, we will not be able to pay you."],
 };
 
@@ -203,6 +201,10 @@ for (var j = 0; j < nTrainingTrials; j++) {
 		word14 = hotels[pairs[j][1]][6];
 		word15 = hotels[pairs[j][0]][7];
 		word16 = hotels[pairs[j][1]][7];
+
+		// randomly generating two homes
+		// randomly sampling which attributes to use for this trial
+		// randomly sampling the values of each home on each of those attributes
 
 	trTrials[j][0] = {
 		type: 'html-keyboard-response',
@@ -391,7 +393,7 @@ var timeline = []
 
 timeline.push(welcome);
 timeline.push(get_id_loop);
-timeline.push(consent_block);
+//timeline.push(consent_block);
 timeline.push(attnCheck1);
 timeline.push(instructions);
 for (var j = 0; j < nTrainingTrials_to_use; j++) {
@@ -405,7 +407,7 @@ timeline.push(strategy)
 timeline.push(comments)
 timeline.push(demo)
 timeline.push(debrief)
-timeline.push(end);
+//timeline.push(end);
 
 jsPsych.init({
 	timeline: timeline
