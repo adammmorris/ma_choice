@@ -1,1629 +1,368 @@
-<!DOCTYPE html>
-<html>
-  <head>
-    <title>Prolific Study</title>
-      
-        <!-- FIREBASE -->
-      
-        <!-- The core Firebase JS SDK is always required and must be listed first -->
-        <script src="https://www.gstatic.com/firebasejs/8.2.1/firebase-app.js"></script>
-        <script src="https://www.gstatic.com/firebasejs/8.2.1/firebase-auth.js"></script>
-        <script src="https://www.gstatic.com/firebasejs/8.2.1/firebase-database.js"></script>
+<!doctype HTML> 
+<html> 
+<head>
+	<title>Introspective Accuracy Assessment</title>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+	<link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/themes/smoothness/jquery-ui.css">
+	<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/jquery-ui.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
+	<script src="https://amorris.mprlab327.opalstacked.com/jspsych-6.3.1/jspsych.js"></script>
+    <script src="https://amorris.mprlab327.opalstacked.com/jspsych-6.3.1/plugins/jspsych-html-keyboard-response.js"></script>
+    <script src="https://amorris.mprlab327.opalstacked.com/jspsych-6.3.1/plugins/jspsych-html-slider-response.js"></script>
+    <script src='https://amorris.mprlab327.opalstacked.com/jspsych-6.3.1/plugins/jspsych-instructions.js'></script>
+    <script src='https://amorris.mprlab327.opalstacked.com/jspsych-6.3.1/plugins/jspsych-survey-text.js'></script>
+    <script src='https://amorris.mprlab327.opalstacked.com/jspsych-6.3.1/plugins/jspsych-external-html.js'></script>
+    <script src='https://amorris.mprlab327.opalstacked.com/jspsych-6.3.1/plugins/jspsych-image-button-response.js'></script>
+    <link href="https://amorris.mprlab327.opalstacked.com/jspsych-6.3.1/css/jspsych.css" rel="stylesheet" type="text/css">
+    <script src="utilities.js"></script>
+    <style>
+	td, th {padding: 20px;}
+	.big {font-size: 40px;}
+	.med {font-size: 24px;}
+	</style>
+</head>
+<body>
+</body>
+<script>
 
-        <!-- TODO: Add SDKs for Firebase products that you want to use
-             https://firebase.google.com/docs/web/setup#available-libraries -->
+// ***Setting Up the Experiment***
 
-        <script>
-          // Your web app's Firebase configuration
-          var firebaseConfig = {
-            apiKey: "AIzaSyCA2AcUC3Ekt6DpINmpde9x8BDVFN5PxNg",
-            authDomain: "self-inf-exp2-p.firebaseapp.com",
-            databaseURL: "https://self-inf-exp2-p-default-rtdb.firebaseio.com",
-            projectId: "self-inf-exp2-p",
-            storageBucket: "self-inf-exp2-p.appspot.com",
-            messagingSenderId: "161801635793",
-            appId: "1:161801635793:web:35a83b611ded38a95482f0"
-          };
+// Meta-var's
+var turk_code = "JSALK23";
+var study_version = "ma_choice_v1_pilot1";
 
+var study_time = 30;
+var study_money = 3.60;
 
+var instr_reading_time = 2000; // in milliseconds
+var instructions_time = 0;
 
-        // Initialize Firebase
-        firebase.initializeApp(firebaseConfig);        
-        //Create reference to the database
-        var database = firebase.database();
-        //Sign in controls
-        firebase.auth().signInAnonymously().catch(function(error) {
-            var errorCode = error.code;
-            var errorMessage = error.message;
-        });      
-        firebase.auth().onAuthStateChanged(function(user) {
-            if (user) {
-                var isAnonymous = user.isAnonymous;
-                var uid = user.uid;
-            }
-        });
-        </script>
-      
-      
-      
-      
-        <!-- jsPSYCH -->
-        <script src="jspsych-6.1.0/jspsych.js"></script>
-        <script src="jspsych-6.1.0/plugins/jspsych-html-keyboard-response.js"></script>
-        <script src="jspsych-6.1.0/plugins/jspsych-html-slider-response.js"></script>
-        <script src="jspsych-6.1.0/plugins/jspsych-image-keyboard-response.js"></script>
-        <script src="jspsych-6.1.0/plugins/jspsych-html-button-response.js"></script>
-        <script src="jspsych-6.1.0/plugins/jspsych-reconstruction.js"></script>
-        <script src="jspsych-6.1.0/plugins/jspsych-reconstruction_instructions.js"></script>
-        <script src="jspsych-6.1.0/plugins/jspsych-reconstruction_induction.js"></script>
-        <script src="jspsych-6.1.0/plugins/jspsych-external-html.js"></script>
-        <script src="jspsych-6.1.0/plugins/jspsych-instructions.js"></script>
-        <script src="jspsych-6.1.0/plugins/jspsych-survey-likert.js"></script>
-        <script src="jspsych-6.1.0/plugins/jspsych-survey-text.js"></script>
-        <link href="jspsych-6.1.0/css/jspsych.css" rel="stylesheet" type="text/css"></link>
+// find the assignmentId & debugging status from the URL
+var urlParams = parseURLParams(window.location.href);
+var assignmentId = '';
+var debug = false;
+if (typeof urlParams != "undefined") {
+    if (urlParams.hasOwnProperty('assignmentId')) {
+        assignmentId = urlParams.assignmentId[0];
+    }
 
-    
-    <!--margin-right: 50px;-->
-        <!-- CSS -->
-        <style type="text/css">
-            
-            #wrapper {
-              display: flex;
-                align-content: center;
-                text-align: center;
-                margin: 0px;
-            }
-            
-            .flex-container {
-              display: flex;
-                justify-content: space-between;
-                font-size: 12px;
-                margin-bottom: -10px;
-            }
-            
-            .flex-container-manip {
-              display: flex;
-                align-items: center;
-                justify-content: space-between;
-                font-size: 12px;
-                margin-bottom: -10px;
-            }
-
-            #leftStim {
-              flex: 0 0 47%;
-                text-align: center;
-                align-content: center;
-                position: relative;
-                align-items:center;
-                padding: 10px;
-                 font-size: 40px;
-                width:200px;
-                height:auto;
-            }
-
-            #rightStim {
-              flex: 1;
-                text-align: center;
-                align-content: center;
-                position: relative;
-                align-items:center;
-                padding: 10px;
-                 font-size: 40px;
-                width:200px;
-                height:auto;
-            }
-            
-            #leftNumStyle {
-              flex: 0 0 50%;
-                text-align: center;
-                align-content: center;
-                position: relative;
-                align-items:center;
-                border: 3px solid #000000;
-                font-family: Arial, sans-serif;
-                font-weight: bold;
-                padding: 20px;
-                font-size: 36px;   
-            }
-
-            #rightNumStyle {
-              flex: 1;
-                text-align: center;
-                align-content: center;
-                position: relative;
-                align-items:center;
-                border: 3px solid #000000;
-                font-family: Arial, sans-serif;
-                font-weight: bold;
-                padding: 20px;
-                font-size: 36px;
-            }
-            
-            .choice-button {
-                border: none;
-                padding: 0;
-            }
-
-            .instructions {
-                margin-right: 200px;
-                margin-left: 200px;
-                text-align: justify;
-            }
-                    
-            .longQ {
-                margin-right: 300px;
-                margin-left: 300px;
-                text-align: justify;
-            }
-
-            #root {
-                background-color: #eee;
-            }
-            
-            p.small {
-              line-height: 1;
-            }
-
-/*
-            img {
-                width:200px;
-                height:auto;
-            }
-*/
-            
-            charAvg {
-                width:800px;
-                height:auto;
-                align-items:center;
-                align-content:center;
-            }
+    if (urlParams.hasOwnProperty('debug')) {
+        debug = urlParams.debug[0];
+    }
+} 
 
 
-       
-        </style>
-    
-  </head>
-  <body></body>
-  <script>
-      
-    
-     
-/* create timeline */
-var timeline = []; 
- 
-      
-////Function to check whether consent has been given
+// Hotel arrays
+// attributes: Room size, continental breakfast, pool, jacuzzi, exercise room, security, restaurants nearby, room service
+// currently keeping these constant across participants to minimize noise
+// my RA did this in a janky way.. obviously can be coded better lol
+var hotels = [
+	['Large', 'Included with Room', 'No pool', 'None', 'None', '24 Hours', 'Yes', 'Yes'],
+	['Medium', 'None', 'Pool', 'Jacuzzi', 'None', '24 Hours', 'Yes', 'No'],
+	['Small', 'Included with Room', 'No Pool', 'Jacuzzi', 'None', '11 am - 7 pm', 'Yes', 'Yes'],
+	['Large', 'None', 'Pool', 'Jacuzzi', 'Yes', 'None', 'No', 'No'],
+	['Small', 'Included with Room', 'No Pool', 'Jacuzzi', 'Yes', 'None', 'No', 'Yes'],
+	['Medium', 'Included with Room', 'Pool', 'None', 'None', '24 Hours', 'Yes', 'No'],
+	['Large', 'Included with Room', 'No Pool', 'Jacuzzi', 'None', 'None', 'No', 'Yes'],
+	['Medium', 'None', 'Pool', 'None', 'Yes', '24 Hours', 'No', 'No'],
+	['Large', 'None', 'Pool', 'None', 'No', '11 am - 7 pm', 'No', 'Yes'],
+	['Small', 'Inlcuded with Room', 'No Pool', 'None', 'Yes', '11 am - 7 pm', 'Yes', 'No'],
+	['Medium', 'None', 'Pool', 'None', 'Yes', 'None', 'Yes', 'Yes'],
+	['Small', 'Included with Room', 'No Pool', 'Jacuzzi', 'None', '11 am - 7 pm', 'Yes', 'No'],
+	['Small', 'None', 'Pool', 'Jacuzzi', 'Yes', '11 am - 7 pm', 'No', 'Yes'],
+	['Large', 'Included with Room', 'No Pool', 'Jacuzzi', 'Yes', '24 Hours', 'No', 'No'],
+	['Large', 'Included with Room', 'Pool', 'Jacuzzi', 'Yes', 'None', 'Yes', 'Yes'],
+	['Medium', 'None', 'Pool', 'None', 'Yes', '11 am - 7 pm', 'Yes', 'No'],
+	['Large', 'Included with Room', 'Pool', 'Jacuzzi', 'Yes', 'None', 'Yes', 'Yes'],
+	['Small', 'Included with Room', 'Pool', 'Jacuzzi', 'None', '11 am - 7 pm', 'Yes', 'No'],
+	['Medium', 'None', 'Pool', 'Jacuzzi', 'None', '24 Hours', 'Yes', 'Yes'],
+	['Medium', 'Included with Room', 'No Pool', 'None', 'Yes', 'None', 'Yes', 'No']
+];
+
+var nhotels = hotels.length;
+var pairs = new Array(190);
+var ind = 0;
+for (var i = 0; i < nhotels; i++) {
+	for (var j = i + 1; j < nhotels; j++) {
+		pairs[ind] = [i, j];
+		ind = ind + 1;
+	}
+}
+pairs = _.shuffle(pairs);
+
+var nTrainingTrials = 100; // only doing 100 of the possible 190 right now
+var nTrainingTrials_to_use = nTrainingTrials;
+
+if (debug) {
+	nTrainingTrials_to_use = 5;
+	instr_reading_time = 0;
+}
+
+var start_instructions = 0;
+
+// ***Intro Blocks***
+
+var welcome = {
+	type: "html-keyboard-response",
+	stimulus: "<div class='center-content'>Welcome to the IAA. Press any key to begin.",
+};
+
+var get_id = {
+	type: 'survey-text',
+	questions: [{prompt: "<b>Worker ID:</b>", name: "worker_id"}],
+	preamble: ["Please enter your <b>Amazon Mechanical Turk Worker ID</b> below.<br>(When you're done, press <b>'Continue'</b>; don't hit Enter.)<br><br>If you do not enter your ID accurately, we will not be able to pay you."],
+};
+
+var get_id_loop = {
+	timeline: [get_id],
+	loop_function: function(data) {
+		id = data.values()[0].response.worker_id;
+		if (id) {
+			jsPsych.data.addProperties({
+				subject: id,
+				version: study_version,
+				assignmentId: assignmentId
+			});
+
+			start_instructions = Date.now();
+
+			return false;
+		} else {
+			alert("Please provide your Amazon Mechanical Turk Worker ID.");
+			return true;
+		}
+	}
+} 
+
 var check_consent = function(elem) {
-        if (document.getElementById('consent_checkbox').checked) {
-            return true;
-        }
-        else {
-            alert("If you wish to participate, you must check the box next to the statement 'I agree to participate in this study.'");
-            return false;
-        }
-        return false;
-    };
+	if ($('#consent_checkbox').is(':checked')) {
+		return true;
+	}
+	else {
+		alert("If you wish to participate, you must check the box next to the statement 'I agree to participate in this study.'");
+		return false;
+	}
+	return false;
+};
+var consent_block = {
+	type:'external-html',
+	url: "consent.php?time=" + study_time + "&money=" + study_money + "&test=1",
+	cont_btn: "start",
+	check_fn: check_consent,
+	force_refresh: true
+};
 
-//Presents external consent page to participants
-    var consent = {
-            type:'external-html',
-            url: "consent.html",
-            cont_btn: "start",
-            check_fn: check_consent
-        };
-        timeline.push(consent);
-      
-      
-      
-      
-      
- //////////////////////////////////////////////////////////////////////////////////////////
- /////////////////////////////////// INSTRUCTIONS ///////////////////////////////////////// 
- ////////////////////////////////////////////////////////////////////////////////////////// 
- 
-      
-    /* define instructions trial */
-    var instructions = {
-      type: "instructions",
-      pages: ['<div class="instructions"><p><strong>Please read these instructions carefully</strong></p><p>In this study you will make a series of choices. You will choose between earning <b>money for yourself</b>, or for the <b>American Red Cross</b> - a humanitarian organization that provides emergency assistance, disaster relief, and disaster preparedness education in the US.</p><p>When making these choices, you will have to select between two dollar amounts of <b>money</b>.</strong></p></div>',
-              
-      '<div class="instructions"><p>You will make 104 choices between money for yourself versus the Red Cross. <br><br>Crucially, for a subset of participants, one of their choices will be randomly selected and actually implemented at the end of the study. This randomly selected choice will determine the payout size and type. Since there is a good chance one of your choices could be selected, and you do not know which one might count, you should <b>treat each choice as if it were the only one that counts</b>.</p><p>If a choice to donate to the Red Cross is selected, money will be donated at the end of the study. If a choice to earn money is selected, the participant will receive this money as a bonus on Prolific.</p><p>Your behavior in the study is confidential.</p></div>',
-              
-      '<div class = "instructions"><p>See below for an example of a choice you might encounter between earning money for yourself and earning money for the Red Cross. Remember, this is real money (e.g, the left option is worth $20). <b>You can only choose one option. You will choose by clicking on one of the two boxes.</b></p></div><p><img src="img/ss_choice_char.png"></p>'],
-    show_clickable_nav: true,
-        on_finish: function(data){
-            data.trial = 'instructions'
-        }
-    };
-    timeline.push(instructions);   
-      
-
-// Instruction 1 
-      // We will periodically ask you to use colored bars like the ones below to make responses.
-      // If so, use the "J" and "F" keys to respond.
-      
-    var function_practice1 = function(param){
-        var size = 50 + Math.floor(param*250); /* min 50/350, max 300/350 */
-        var html = 
-        '<p style="font-family:arial;font-size: 16px">We will periodically ask you to use colored bars<br> like the ones below to make responses.</p>'+
-
-        '<p style="font-family:arial;font-size: 16px">You will use the "<b>F</b>" and "<b>J</b>" keys to respond.</p>'+
-            
-       '<p style="font-family:arial;font-size: 16px">Try using these keys to move the bars now.</p>'+
-            
-        // Bar ticks, n = 51: This code keeps the bar centered
-        '<p style="font-family:arial;font-size:100%;margin-bottom: 10px;margin-top: 0px"><span style="color: white;font-size:18px">--------</span><span style="color: white;font-size:18px">|</span><span style="color: white;font-size:18px">........<span style="color: white;font-size:18px">|</span><span style="color: white;font-size:18px">...............</span><span style="color: white;font-size:18px">|</span><span style="color: white;font-size:18px">...............<span style="color: white;font-size:18px">|</span><span style="color: white;font-size:18px">........</span><span style="color: white;font-size:18px">|</span><span style="color: white;font-size:18px">--------</span></p></div>'+
-            
-        '<div style="display: block; position: absolute; align: center; margin: auto; background-color:  #C5D270; '+
-        'width: '+350+'px; height: '+30+'px;"></div></div>'+
-            '<div style="display: block; margin: auto; height: 50px;">'+
-            
-        '<div style="display: block; position: absolute; align: center; margin: auto; background-color:  #8E5485; '+
-        'width: '+size+'px; height: '+30+'px;"></div></div></div>'
-        return html;
-    }
-    
-      
-    var practice1 = {
-        type: 'reconstruction_instructions',
-        stim_function: function_practice1,
-        starting_value: .5,
-        key_increase: 'f',
-        key_decrease: 'j',
-        on_finish: function(data){
-            data.trial = 'practice1'
-        }
-    }
-    timeline.push(practice1);
-      
-    
-// Instruction 2
-      // Use these bars to express how much you want one option versus another.
-      // Each option will have a color, and increasing the color for an option indicates how much you want that option relative to the other.
-      
-    var function_practice2 = function(param){
-        var size = 50 + Math.floor(param*250); /* min 50/350, max 300/350 */
-        var html = 
-        '<p style="font-family:arial;font-size: 16px">You will use these bars to express <b>how much <br>you want one option over the other</b>.</p>'+
-
-        '<p style="font-family:arial;font-size: 16px">Each option will have a color reflected below, and <br>increasing its color indicates that you<br> want that option more relative to the other.</p>'+
-
-        // Bar ticks, n = 51: This code keeps the bar centered
-        '<p style="font-family:arial;font-size:100%;margin-bottom: 10px;margin-top: 0px"><span style="color: white;font-size:18px">--------</span><span style="color: white;font-size:18px">|</span><span style="color: white;font-size:18px">........<span style="color: white;font-size:18px">|</span><span style="color: white;font-size:18px">...............</span><span style="color: white;font-size:18px">|</span><span style="color: white;font-size:18px">...............<span style="color: white;font-size:18px">|</span><span style="color: white;font-size:18px">........</span><span style="color: white;font-size:18px">|</span><span style="color: white;font-size:18px">--------</span></p></div>'+
-
-        '<div style="display: block; position: absolute; align: center; margin: auto; background-color:  #C5D270; '+
-        'width: '+350+'px; height: '+30+'px;"></div></div>'+
-            '<div style="display: block; margin: auto; height: 50px;">'+
-            
-        '<div style="display: block; position: absolute; align: center; margin: auto; background-color:  #8E5485; '+
-        'width: '+size+'px; height: '+30+'px;"></div></div></div>'
-        return html;
-    }
-    
-      
-    var practice2 = {
-        type: 'reconstruction_instructions',
-        stim_function: function_practice2,
-        starting_value: .5,
-        key_increase: 'f',
-        key_decrease: 'j',
-        on_finish: function(data){
-            data.trial = 'practice2'
-        }
-    }
-    timeline.push(practice2);
-      
-      
-    
-    var function_practice3 = function(param){
-        var size = 50 + Math.floor(param*250); /* min 50/350, max 300/350 */
-        var html = 
-        '<p style="font-family:arial;font-size: 16px">Here is an example where we include some<br> labels illustrating different color ratios:</p>'+   
-    
-        '<p style="font-family:arial;font-size: 16px">Imagine you are asked how much you want<br>a <b><font color="8E5485">plum</font></b> versus a <b><font color="C5D270">pear</font></b>?</p>'+
-
-        '<p style="font-family:arial;font-size: 16px">A response at "6:1" would mean you want<br>a <b><font color="8E5485">plum</font></b> <i>six times</i> more than a <b><font color="C5D270">pear</font></b></p>'+
-    
-         // Bar labels
-        '<p style="font-family:arial;font-size:85%;margin-bottom: 0px"><span style="color: white;">--------</span><span style="color: lightgrey;">1:6</span><span style="color: white;">.....<span style="color: lightgrey;">1:3</span><span style="color: white;">..............</span><span style="color: lightgrey;">1:1</span><span style="color: white;">..............<span style="color: lightgrey;">3:1</span><span style="color: white;">.....</span><span style="color: lightgrey;">6:1</span><span style="color: white;">--------</span></p></div>'+ 
-        // Bar ticks, n = 51 
-            // 50/300, 87.5/262.5, 175/175, 262.5/87.5, 300/50
-        '<p style="font-family:arial;font-size:100%;margin-bottom: 10px;margin-top: 0px"><span style="color: white;">--------</span><span style="color: lightgrey;">|</span><span style="color: white;">........<span style="color: lightgrey;">|</span><span style="color: white;">...............</span><span style="color: lightgrey;">|</span><span style="color: white;">...............<span style="color: lightgrey;">|</span><span style="color: white;">........</span><span style="color: lightgrey;">|</span><span style="color: white;">--------</span></p></div>'+
-                  
-        '<div style="display: block; position: absolute; align: center; margin: auto; background-color:  #C5D270; '+
-        'width: '+350+'px; height: '+30+'px;"></div></div>'+
-        '<div style="display: block; margin: auto; height: 50px;">'+
-
-        '<div style="display: block; position: absolute; align: center; margin: auto; background-color:  #8E5485; '+
-        'width: '+size+'px; height: '+30+'px;"></div></div></div>'
-        return html;
-    }
-    
-
-      
-    var practice3 = {
-        type: 'reconstruction_instructions',
-        stim_function: function_practice3,
-        starting_value: 1,
-        key_increase: 'f',
-        key_decrease: 'j',
-        on_finish: function(data){
-            data.trial = 'practice3'
-        }
-    }
-    timeline.push(practice3);
-      
-      
-    var function_practice4 = function(param){
-        var size = 50 + Math.floor(param*250); /* min 50/350, max 300/350 */
-        var html = 
-        '<p style="font-family:arial;font-size: 16px">A response at "1:1" would mean you want<br>a <b><font color="8E5485">plum</font></b> and a <b><font color="C5D270">pear</font></b> equally</p>'+
-
-            
-        // Bar labels
-        '<p style="font-family:arial;font-size:85%;margin-bottom: 0px"><span style="color: white;">--------</span><span style="color: lightgrey;">1:6</span><span style="color: white;">.....<span style="color: lightgrey;">1:3</span><span style="color: white;">..............</span><span style="color: lightgrey;">1:1</span><span style="color: white;">..............<span style="color: lightgrey;">3:1</span><span style="color: white;">.....</span><span style="color: lightgrey;">6:1</span><span style="color: white;">--------</span></p></div>'+ 
-        // Bar ticks, n = 51 
-            // 50/300, 87.5/262.5, 175/175, 262.5/87.5, 300/50
-        '<p style="font-family:arial;font-size:100%;margin-bottom: 10px;margin-top: 0px"><span style="color: white;">--------</span><span style="color: lightgrey;">|</span><span style="color: white;">........<span style="color: lightgrey;">|</span><span style="color: white;">...............</span><span style="color: lightgrey;">|</span><span style="color: white;">...............<span style="color: lightgrey;">|</span><span style="color: white;">........</span><span style="color: lightgrey;">|</span><span style="color: white;">--------</span></p></div>'+
-            
-            
-            
-        '<div style="display: block; position: absolute; align: center; margin: auto; background-color:  #C5D270; '+
-        'width: '+350+'px; height: '+30+'px;"></div></div>'+
-        '<div style="display: block; margin: auto; height: 50px;">'+
-
-        '<div style="display: block; position: absolute; align: center; margin: auto; background-color:  #8E5485; '+
-        'width: '+size+'px; height: '+30+'px;"></div></div></div>'
-        return html;
-    }
-    
-
-      
-    var practice4 = {
-        type: 'reconstruction_instructions',
-        stim_function: function_practice4,
-        starting_value: .5,
-        key_increase: 'f',
-        key_decrease: 'j',
-        on_finish: function(data){
-            data.trial = 'practice4'
-        }
-    }
-    timeline.push(practice4);
-      
-      
-      
-    var function_practice5 = function(param){
-        var size = 50 + Math.floor(param*250); /* min 50/300, max 300/350 */
-        var html = 
-        '<p style="font-family:arial;font-size: 16px">A response at "1:6" would mean you want<br>a <b><font color="C5D270">pear</font></b> six times more than a <b><font color="8E5485">plum</font></b></p>'+
-            
-        '<p style="font-family:arial;font-size: 16px"><b>Note</b>: we will not display these ratios again,<br>so use the <i>relative</i> amount of color for each<br> option to guide your responses.</font></b></p>'+
-
-        // Bar labels
-        '<p style="font-family:arial;font-size:85%;margin-bottom: 0px"><span style="color: white;">--------</span><span style="color: lightgrey;">1:6</span><span style="color: white;">.....<span style="color: lightgrey;">1:3</span><span style="color: white;">..............</span><span style="color: lightgrey;">1:1</span><span style="color: white;">..............<span style="color: lightgrey;">3:1</span><span style="color: white;">.....</span><span style="color: lightgrey;s">6:1</span><span style="color: white;">--------</span></p></div>'+ 
-        // Bar ticks, n = 51 
-            // 50/300, 87.5/262.5, 175/175, 262.5/87.5, 300/50
-        '<p style="font-family:arial;font-size:100%;margin-bottom: 10px;margin-top: 0px"><span style="color: white;">--------</span><span style="color: lightgrey;">|</span><span style="color: white;">........<span style="color: lightgrey;">|</span><span style="color: white;">...............</span><span style="color: lightgrey;">|</span><span style="color: white;">...............<span style="color: lightgrey;">|</span><span style="color: white;">........</span><span style="color: lightgrey;">|</span><span style="color: white;">--------</span></p></div>'+
-                
-        '<div style="display: block; position: absolute; align: center; margin: auto; background-color:  #C5D270; '+
-        'width: '+350+'px; height: '+30+'px;"></div></div>'+
-        '<div style="display: block; margin: auto; height: 50px;">'+
-
-        '<div style="display: block; position: absolute; align: center; margin: auto; background-color:  #8E5485; '+
-        'width: '+size+'px; height: '+30+'px;"></div></div></div>'
-        return html;
-    }
-    
-
-      
-    var practice5 = {
-        type: 'reconstruction_instructions',
-        stim_function: function_practice5,
-        starting_value: 0,
-        key_increase: 'f',
-        key_decrease: 'j',
-        on_finish: function(data){
-            data.trial = 'practice5'
-        }
-    }
-    timeline.push(practice5);
-      
-      
-      
-       
- // attention check question
-    
-    var attncheck = {
-        type: 'html-button-response',
-        stimulus: 'The response below would indicate which of the following:<br><img src="img/pear_bar.png">',
-        choices: ['Wanting a <b><font color="C5D270">pear</font></b> 6x more', 
-                  'Wanting a <b><font color="C5D270">pear</font></b>/<b><font color="8E5485">plum</font></b> <b>equally</b>',
-                  'Wanting a <b><font color="8E5485">plum</font></b> 6x more'],
-        on_finish: function(data){
-            data.trial = 'attncheck'
-        }
-      };
-
-      
-    
-        var attncheck_fb = {
-            type: 'html-button-response',
-            data: {Trial_Type: 'InstructionFeedback'},
-            stimulus: function(){
-                if(jsPsych.data.get().last(1).values()[0].button_pressed == 0){
-                    return "<div style='font-size: 20px'><b>Correct!</b> This response would indicate wanting a <b><font color=C5D270>pear</font></b> six times more</div><img src=img/pear_bar.png>"
-                } else {
-                    return "<div style='font-size: 20px'><b>Incorrect:</b> This response would indicate wanting a <b><font color=C5D270>pear</font></b> six times more</div><img src=img/pear_bar.png>"
-                }
-            },
-            choices: ['I understand'],
-            on_finish: function(data){
-                data.trial = 'attncheck_fb'
-            }
-        }
-                  
-
-   
-timeline.push(attncheck);  
-timeline.push(attncheck_fb); 
-      
-      
-      
-   
-
-      
- //////////////////////////////////////////////////////////////////////////////////////////////
- //////////////////////////////////////////// TASK //////////////////////////////////////////// 
- //////////////////////////////////////////////////////////////////////////////////////////////      
-    
-       
-    // create random start points for motive scale
-        var randStart_pro_char = Math.floor(Math.random()*10);
-        var randStart_active_char = Math.floor(Math.random()*10);
-        var randStart_retro_char = Math.floor(Math.random()*10);
-        var randStart_pro_gc = Math.floor(Math.random()*10);
-        var randStart_active_gc = Math.floor(Math.random()*10);
-        var randStart_retro_gc = Math.floor(Math.random()*10);
-      
-        randStart_pro_char = randStart_pro_char *.1; /*/ for 7 pt scale /*/
-        randStart_active_char = randStart_active_char *.1; /*/ for 7 pt scale /*/
-        randStart_retro_char = randStart_retro_char *.1; /*/ for 7 pt scale /*/
-        randStart_pro_gc = randStart_pro_gc *.1; /*/ for 7 pt scale /*/
-        randStart_active_gc = randStart_active_gc *.1; /*/ for 7 pt scale /*/
-        randStart_retro_gc = randStart_retro_gc *.1; /*/ for 7 pt scale /*/
-
-   
-    
-      
-    var loop_youColor = jsPsych.randomization.sampleWithoutReplacement(["blue","blue"], 1)[0]; // changed: remove beige 
-    if(loop_youColor == 'blue') {
-        var youColor = '#6A9ACF' // blue
-        var youColor_pic = 'you_blue.png'
-        var youColor_colorName = 'blue'
-    } else {
-        var youColor = '#A9957B' // beige D4C29C 
-        var youColor_pic = 'you_beige.png'
-        var youColor_colorName = 'beige'
-    };
-      
-      
-    var loop_position = jsPsych.randomization.sampleWithoutReplacement(["left_self_BB","right_self_BB"], 1)[0];
-    if(loop_position == 'left_self_BB') {
-            var leftNum = 0
-            var left_char = 'yourself'
-            var left_char_Color = youColor
-            var left_char_Stim = youColor_pic
-            var left_char_ColorName = youColor_colorName
-            var left_char_avg = 'themselves'
-
-            var left_gc = 'BestBuy'
-            var left_gc_Color = "#f0bf2b"  // 243A5B
-            var left_gc_Stim = 'gc_bestbuy.png'
-            var left_gc_ColorName = 'yellow'
-        
-            var rightNum = 1 
-            var right_char = 'the Red Cross'
-            var right_char_Color = '#CA0301' // red
-            var right_char_Stim = 'char.png'
-            var right_char_ColorName = 'red'
-            var right_char_avg = 'the Red Cross'
-
-            var right_gc = 'Grubhub'
-            var right_gc_Color = '#ff7124' // light red E24848 
-            var right_gc_Stim = 'gc_grubhub.png'
-            var right_gc_ColorName = 'orange'
-            
-            var motiveVal = .116
-            var motiveValLeft = "11.6%" 
-            var tickColorLeft = 'black'
-            var tickColorRight = 'white'
-
-
-        
-    } else {
-            var leftNum = 1
-            var left_char = 'the Red Cross'
-            var left_char_Color = '#CA0301' // red 
-            var left_char_Stim = 'char.png'
-            var left_char_ColorName = 'red'
-            var left_char_avg = 'the Red Cross'
-
-            var left_gc = 'Grubhub'
-            var left_gc_Color = '#ff7124' // light red E24848 
-            var left_gc_Stim = 'gc_grubhub.png'
-            var left_gc_ColorName = 'orange'
-            
-            var rightNum = 0   
-            var right_char = 'yourself'
-            var right_char_Color = youColor
-            var right_char_Stim = youColor_pic
-            var right_char_ColorName = youColor_colorName
-            var right_char_avg = 'themselves'
-
-            var right_gc = 'BestBuy'
-            var right_gc_Color = "#f0bf2b"  // 243A5B
-            var right_gc_Stim = 'gc_bestbuy.png'
-            var right_gc_ColorName = 'yellow'
-            
-            var motiveVal = .894
-            var tickColorLeft = 'white'
-            var tickColorRight = 'black'
-    };
-     
-      
-      
-    //  
-      
-    if(loop_youColor == 'blue' && loop_position == 'left_self_BB') {  
-    charAvgImg = 'choiceAvg_left_self_blue.png'}
-      
-        else if(loop_youColor == 'blue' && loop_position == 'right_self_BB') {  
-        charAvgImg = 'choiceAvg_right_self_blue.png'}
-
-        else if(loop_youColor == 'beige' && loop_position == 'left_self_BB') {  
-        charAvgImg = 'choiceAvg_left_self_beige.png'}
-
-        else if(loop_youColor == 'beige' && loop_position == 'right_self_BB') {  
-        charAvgImg = 'choiceAvg_right_self_beige.png'};
-      
-      
-    
-    // MANIPULATION CONDITION ASSIGNMENT 
-      
-        var condition = jsPsych.randomization.sampleWithoutReplacement(["motive","choice","control"], 1)[0]; 
-      
-    // PROSPECTIVE CONDITION ASSIGNMENT (all subject complete it in this study)
-      
-        //var pros_q = jsPsych.randomization.sampleWithoutReplacement(["pro","no"], 1)[0];  
-       
-      
-      
-      
-      
-// CHARITY MOTIVE Q (PROSPECTIVE / ACTIVE)
-      
-      
-    var function_char = function(param){
-        var size = 50 + Math.floor(param*250); /* min 50/350, max 300/350 */
-        var html = 
-           '<p style="font-family:arial;">How much do you want to earn money for <br><b><font color="'+left_char_Color+'">'+left_char+'</font></b> vs. money for <b><font color="'+right_char_Color+'">'+right_char+'</font></b>?</p>'+
-            
-            '<p class = "small" style="font-family:arial;margin-top: 25px;margin-bottom:5px"><font size="2"></p>'+
-            
-            
-       '<div class="flex-container"><div><p class = "small" style="font-family:arial;"><br>more <b><font color="'+left_char_Color+'">'+left_char_ColorName+'</font></b> = want to <br>earn money for <br><font color="'+left_char_Color+'">'+left_char+'</font> more<br><br>"F" <font size="+1">→</font></p></div>'+'<div><p class = "small" style="font-family:arial;"><br>more <b><font color="'+right_char_Color+'">'+right_char_ColorName+'</font></b> = want to <br>earn money for <br><font color="'+right_char_Color+'">'+right_char+'</font> more<br><br><font size="+1">←</font> "J"</p></div></div>'+ 
-            
-                // Bar ticks, n = 51
-        '<p style="font-family:arial;font-size:100%;margin-bottom: 10px;margin-top: 0px"><span style="color: white;font-size:18px">--------</span><span style="color: white;font-size:18px">|</span><span style="color: white;font-size:18px">........<span style="color: white;font-size:18px">|</span><span style="color: white;font-size:18px">...............</span><span style="color: white;font-size:18px">|</span><span style="color: white;font-size:18px">...............<span style="color: white;font-size:18px">|</span><span style="color: white;font-size:18px">........</span><span style="color: white;font-size:18px">|</span><span style="color: white;font-size:18px">--------</span></p></div>'+
-            
-
-        '<div style="display: block; position: absolute; align: center; margin: auto; background-color:  '+right_char_Color+'; '+
-        'width: '+350+'px; height: '+30+'px;"></div></div>'+
-            '<div style="display: block; margin: auto; height: 50px;">'+
-            
-        '<div style="display: block; position: absolute; align: center; margin: auto; background-color:  '+left_char_Color+'; '+
-        'width: '+size+'px; height: '+30+'px;"></div></div></div>'
-        return html;
-    }
-      
-      
-      
-    
-    
-    
-// GIFTCARD MOTIVE Q (PROSPECTIVE / ACTIVE)
-    
-//    
-//    var function_gc = function(param){
-//        var size = 50 + Math.floor(param*250); /* min 50/350, max 300/350 */
-//        var html = 
-//           '<p style="font-family:arial;">How much do you want to earn yourself a<br><b><font color="'+left_gc_Color+'">'+left_gc+'</font></b> vs. <b><font color="'+right_gc_Color+'">'+right_gc+'</font></b> gift card?</p>'+
-//            
-//            '<p class = "small" style="font-family:arial;margin-top: 25px;margin-bottom:5px"><font size="2"></p>'+
-//
-//       '<div class="flex-container"><div><p class = "small" style="font-family:arial;"><br>more <b><font color="'+left_gc_Color+'">'+left_gc_ColorName+'</font></b> = want to <br>earn money for <br><font color="'+left_gc_Color+'">'+left_gc+'</font> more<br><br>"F" <font size="+1">→</font></p></div>'+'<div><p class = "small" style="font-family:arial;"><br>more <b><font color="'+right_gc_Color+'">'+right_gc_ColorName+'</font></b> = want to <br>earn money for <br><font color="'+right_gc_Color+'">'+right_gc+'</font> more<br><br><font size="+1">←</font> "J"</p></div></div>'+ 
-//            
-//                // Bar ticks, n = 51
-//        '<p style="font-family:arial;font-size:100%;margin-bottom: 10px;margin-top: 0px"><span style="color: white;font-size:18px">--------</span><span style="color: white;font-size:18px">|</span><span style="color: white;font-size:18px">........<span style="color: white;font-size:18px">|</span><span style="color: white;font-size:18px">...............</span><span style="color: white;font-size:18px">|</span><span style="color: white;font-size:18px">...............<span style="color: white;font-size:18px">|</span><span style="color: white;font-size:18px">........</span><span style="color: white;font-size:18px">|</span><span style="color: white;font-size:18px">--------</span></p></div>'+
-//            
-//
-//        '<div style="display: block; position: absolute; align: center; margin: auto; background-color:  '+right_gc_Color+'; '+
-//        'width: '+350+'px; height: '+30+'px;"></div></div>'+
-//            '<div style="display: block; margin: auto; height: 50px;">'+
-//            
-//        '<div style="display: block; position: absolute; align: center; margin: auto; background-color:  '+left_gc_Color+'; '+
-//        'width: '+size+'px; height: '+30+'px;"></div></div></div>'
-//        return html;
-//    }
- 
-// CHARITY MOTIVE Q (RETROSPECTIVE) # changes "do" to "did", "want" to "wanted"
-      
-      
-    var function_char_retro = function(param){
-        var size = 50 + Math.floor(param*250); /* min 50/350, max 300/350 */
-        var html = 
-           '<p style="font-family:arial;">How much did you want to earn money for <br><b><font color="'+left_char_Color+'">'+left_char+'</font></b> vs. money for <b><font color="'+right_char_Color+'">'+right_char+'</font></b>?</p>'+
-            
-            '<p class = "small" style="font-family:arial;margin-top: 25px;margin-bottom:5px"><font size="2"></p>'+
-            
-       '<div class="flex-container"><div><p class = "small" style="font-family:arial;"><br>more <b><font color="'+left_char_Color+'">'+left_char_ColorName+'</font></b> = wanted to <br>earn money for <br><font color="'+left_char_Color+'">'+left_char+'</font> more<br><br>"F" <font size="+1">→</font></p></div>'+'<div><p class = "small" style="font-family:arial;"><br>more <b><font color="'+right_char_Color+'">'+right_char_ColorName+'</font></b> = wanted to <br>earn money for <br><font color="'+right_char_Color+'">'+right_char+'</font> more<br><br><font size="+1">←</font> "J"</p></div></div>'+ 
-            
-            
-            
-            
-            
-                // Bar ticks, n = 51
-        '<p style="font-family:arial;font-size:100%;margin-bottom: 10px;margin-top: 0px"><span style="color: white;font-size:18px">--------</span><span style="color: white;font-size:18px">|</span><span style="color: white;font-size:18px">........<span style="color: white;font-size:18px">|</span><span style="color: white;font-size:18px">...............</span><span style="color: white;font-size:18px">|</span><span style="color: white;font-size:18px">...............<span style="color: white;font-size:18px">|</span><span style="color: white;font-size:18px">........</span><span style="color: white;font-size:18px">|</span><span style="color: white;font-size:18px">--------</span></p></div>'+
-            
-
-        '<div style="display: block; position: absolute; align: center; margin: auto; background-color:  '+right_char_Color+'; '+
-        'width: '+350+'px; height: '+30+'px;"></div></div>'+
-            '<div style="display: block; margin: auto; height: 50px;">'+
-            
-        '<div style="display: block; position: absolute; align: center; margin: auto; background-color:  '+left_char_Color+'; '+
-        'width: '+size+'px; height: '+30+'px;"></div></div></div>'
-        return html;
-    }
-  
-    
-// GIFTCARD MOTIVE Q (RETROSPECTIVE) # changes "do" to "did"
-      
-  
-//
-//    var function_gc_retro = function(param){
-//        var size = 50 + Math.floor(param*250); /* min 50/350, max 300/350 */
-//        var html = 
-//           '<p style="font-family:arial;">How much did you want to earn yourself a<br><b><font color="'+left_gc_Color+'">'+left_gc+'</font></b> vs. <b><font color="'+right_gc_Color+'">'+right_gc+'</font></b> gift card?</p>'+
-//            
-//            '<p class = "small" style="font-family:arial;margin-top: 25px;margin-bottom:5px"><font size="2"></p>'+
-//
-//       '<div class="flex-container"><div><p class = "small" style="font-family:arial;"><br>more <b><font color="'+left_gc_Color+'">'+left_gc_ColorName+'</font></b> = wanted to <br>earn money for <br><font color="'+left_gc_Color+'">'+left_gc+'</font> more<br><br>"F" <font size="+1">→</font></p></div>'+'<div><p class = "small" style="font-family:arial;"><br>more <b><font color="'+right_gc_Color+'">'+right_gc_ColorName+'</font></b> = wanted to <br>earn money for <br><font color="'+right_gc_Color+'">'+right_gc+'</font> more<br><br><font size="+1">←</font> "J"</p></div></div>'+ 
-//            
-//                // Bar ticks, n = 51
-//        '<p style="font-family:arial;font-size:100%;margin-bottom: 10px;margin-top: 0px"><span style="color: white;font-size:18px">--------</span><span style="color: white;font-size:18px">|</span><span style="color: white;font-size:18px">........<span style="color: white;font-size:18px">|</span><span style="color: white;font-size:18px">...............</span><span style="color: white;font-size:18px">|</span><span style="color: white;font-size:18px">...............<span style="color: white;font-size:18px">|</span><span style="color: white;font-size:18px">........</span><span style="color: white;font-size:18px">|</span><span style="color: white;font-size:18px">--------</span></p></div>'+
-//            
-//
-//        '<div style="display: block; position: absolute; align: center; margin: auto; background-color:  '+right_gc_Color+'; '+
-//        'width: '+350+'px; height: '+30+'px;"></div></div>'+
-//            '<div style="display: block; margin: auto; height: 50px;">'+
-//            
-//        '<div style="display: block; position: absolute; align: center; margin: auto; background-color:  '+left_gc_Color+'; '+
-//        'width: '+size+'px; height: '+30+'px;"></div></div></div>'
-//        return html;
-//    }
- 
-    
-    var begin = {
-      type: "instructions",
-      pages: ['<div class="instructions"><p>Please press "Next" to begin the study.</p></div>'],
-    show_clickable_nav: true,
-        on_finish: function(data){
-            data.trial = 'begin'
-        }
-    };
-    timeline.push(begin);  
-      
-      
-      
-      
-    
-//// WITHIN* SUBJECTS QUESTION (PROSPECTION)
-  
-//if(pros_q ==  "pro"){
-    
-    var think_proT1 = {
-      type: "instructions",
-      pages: ['<p>Think about the different options you can pursue in this study.</p>'],
-    show_clickable_nav: true,
-        on_finish: function(data){
-            data.trial = 'think_proT1'
-        }
-    };
-    timeline.push(think_proT1); 
-    
-    var pro_charT1 = {
-        type: 'reconstruction',
-        stim_function: function_char,
-        starting_value: randStart_pro_char,
-        key_increase: 'f',
-        key_decrease: 'j',
-        on_finish: function(data){
-            data.pros_q = 'True',
-            data.trial = 'pro_charT1'
-        }
-    };
-    timeline.push(pro_charT1); 
-    
-    var pro_char_confT1 = {
-        type: 'html-slider-response',
-        min: 1,
-        max: 7,
-        start: 4,
-        step: 1,
-        stimulus: "<p>How <b>confident</b> are you that you <br>accurately reported what you want? <br> <div class='flex-container'><div>Not at all</div><div>Extremely</div></div>",
-        labels: [1,2,3,4,5,6,7],
-        on_finish: function(data){
-            data.trial = 'pro_char_confT1'
-        }
-    };
-    timeline.push(pro_char_confT1);
-
-    
-      
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////      
-            
-////////////////////////
-//////////Task Set Up//////////
-//////////////////////// 
-      
-    
-    // Function to create a random order
-      
-    const order = [...Array(51).keys()];
-      
-    
-    function shuffle(array) {
-      var currentIndex = array.length, temporaryValue, randomIndex;
-
-      // While there remain elements to shuffle...
-      while (0 !== currentIndex) {
-
-        // Pick a remaining element...
-        randomIndex = Math.floor(Math.random() * currentIndex);
-        currentIndex -= 1;
-
-        // And swap it with the current element.
-        temporaryValue = array[currentIndex];
-        array[currentIndex] = array[randomIndex];
-        array[randomIndex] = temporaryValue;
-      }
-
-      return array;
-    }
-      
-    const random_order = shuffle(order); 
-      
-
-      
-    // Choice option pairs
-      
-    const pairs_left = [20.00, 9.00, 36.00, 6.62, 32.45, 7.14, 32.86, 18.46, 41.58, 7.58, 21.82, 19.09, 36.41, 12.06, 27.00, 19.58, 32.42, 6.61, 40.09, 11.50, 38.33, 10.24, 35.39, 6.29, 15.00, 40.50, 8.33, 24.62, 7.50, 30.75, 7.24, 38.35, 8.85, 30.67, 10.22, 26.25, 12.89, 32.59, 11.11, 32.00, 13.44, 33.18, 8.52, 29.56, 15.00, 36.90, 39.58, 34.40, 7.34, 37.15, 11.36];
-    
-    const pairs_right = [20.00, 36.00, 6.00, 38.38, 9.55, 32.86, 7.14, 29.54, 7.42, 42.42, 18.18, 22.91, 7.59, 28.94, 15.00, 27.42, 11.58, 34.39, 6.91, 34.50, 7.67, 32.76, 13.61, 37.71, 27.00, 7.50, 31.67, 15.38, 37.50, 10.25, 34.76, 10.65, 37.15, 15.33, 36.78, 18.75, 36.11, 7.41, 28.89, 10.00, 29.56, 13.82, 37.48, 13.44, 30.00, 7.10, 10.42, 8.60, 39.66, 8.85, 38.64];
-      
-    const original_pairs = [pairs_left,pairs_right]  
-      
-        // identical to above (not needed for this exp.)
-     
-//    const pairs2_left = [20.00, 9.00, 36.00, 6.62, 32.45, 7.14, 32.86, 18.46, 41.58, 7.58, 21.82, 19.09, 36.41, 12.06, 27.00, 19.58, 32.42, 6.61, 40.09, 11.50, 38.33, 10.24, 35.39, 6.29, 15.00, 40.50, 8.33, 24.62, 7.50, 30.75, 7.24, 38.35, 8.85, 30.67, 10.22, 26.25, 12.89, 32.59, 11.11, 32.00, 13.44, 33.18, 8.52, 29.56, 15.00, 36.90, 39.58, 34.40, 7.34, 37.15, 11.36];
-//    
-//    const pairs2_right = [20.00, 36.00, 6.00, 38.38, 9.55, 32.86, 7.14, 29.54, 7.42, 42.42, 18.18, 22.91, 7.59, 28.94, 15.00, 27.42, 11.58, 34.39, 6.91, 34.50, 7.67, 32.76, 13.61, 37.71, 27.00, 7.50, 31.67, 15.38, 37.50, 10.25, 34.76, 10.65, 37.15, 15.33, 36.78, 18.75, 36.11, 7.41, 28.89, 10.00, 29.56, 13.82, 37.48, 13.44, 30.00, 7.10, 10.42, 8.60, 39.66, 8.85, 38.64];
-      
-      
-    // Randomize choice options based on randomorder
-       
-    const option_pairs_left = random_order.map(i => pairs_left[i]);
-    const option_pairs_right = random_order.map(i => pairs_right[i]);
-      
-        var option_pairs = [option_pairs_left,option_pairs_right]  
-      
-      
-//    const option_pairs2_left = random_order.map(i => pairs2_left[i]);
-//    const option_pairs2_right = random_order.map(i => pairs2_right[i]);
-//      
-//        var option_pairs2 = [option_pairs_left,option_pairs2_right]  
-    
-    
-
-      
-      
-// NEED TO SAVE CONTENTS OF ALL LOOPS
-      
-     
-    var choice_set = 51; // change back to 51
-    var j;
-      
-      
-
-  var catchIndex = jsPsych.randomization.sampleWithoutReplacement([30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45], 1)[0];
-
-      
-      
-      
-//START BLOCKS WITH FIXATION
-      
-    var startTask = {
-      type: "instructions",
-      pages: ['<p>Continue to the next screen when you are ready to begin the first set of choices. <br><b>As a reminder, you can only choose one of the options on the screen</b></p>'],
-    show_clickable_nav: true,
+// first attention check
+var attnCheck1 = {
+    type: 'survey-text',
+    questions: [{prompt: 'Your response', name: 'attention_check'}],
+    preamble: ["Please type this exact sentence into the box below: 'I will complete this study with my full attention.' and then continue."],
     on_finish: function(data) {
-        data.condition = condition,
-        //data.pros_q = pros_q,  
-        data.loop_youColor = loop_youColor,
-        data.loop_position = loop_position,
-        data.random_order = random_order,
-        data.option_pairs = option_pairs,
-        data.original_pairs = original_pairs,
-        data.trial = "startTask"}
-    };
-    timeline.push(startTask);   
-      
-   var ITI = [750,800,850,900,950,1000];
-      
-   var fixation = {
-    type: 'html-keyboard-response',
-    stimulus: "<p style='font-size: 50px'> + </p>",
-    choices: [27],
-    trial_duration: function(){ return jsPsych.randomization.sampleWithoutReplacement(ITI, 1)[0]; },
-        on_finish: function(data){
-            data.trial = 'fixation'
-        }
-    };
-    timeline.push(fixation);  
-    
-      
-      
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////     
-      
-// BEGINNING OF CHOICE LOOP    
-      
-      
-  
-      
-      
-      
-      
-   
-//CHAR FIRST
-        for (j = 0; j < choice_set; j++) {
-            if(j < 26) {
-                var char_half1 = {
-                    type: 'html-button-response',
-                    stimulus: ['<div id="wrapper"><div id="leftStim"><img src="img/'+left_char_Stim+'"></div>'+'<div id="rightStim"><img src="img/'+right_char_Stim+'"></div></div>'],
-                    choices: ['<div id="wrapper"><div id="leftNumStyle">'+ (Math.round(option_pairs[leftNum][j] * 100) / 100).toFixed(2) + '</div></div>', '<div id="wrapper"><div id="rightNumStyle">'+(Math.round(option_pairs[rightNum][j] * 100) / 100).toFixed(2) + '</div></div>'],
-                    margin_horizontal: '100px',
-                    button_html: '<button class="choice-button">%choice%</button>',
-                    on_finish: function(data){
-                        data.trial = 'char_half1',
-                        data.optionL = left_char_Stim,
-                        data.optionR = right_char_Stim
-                    }
-                };
-                timeline.push(char_half1);
-                timeline.push(fixation);
-            };
-
-            
-            if(j == catchIndex) {
-                var catchTrial = {
-                    type: 'html-button-response',
-                    stimulus: ['<div id="wrapper"><div id="leftStim"><img src="img/'+youColor_pic+'"></div>'+'<div id="rightStim"><img src="img/'+youColor_pic+'"></div></div>'],
-                    choices: ['<div id="wrapper"><div id="leftNumStyle">'+ "50.00" + '</div></div>', '<div id="wrapper"><div id="rightNumStyle">'+ "0.00" + '</div></div>'],
-                    margin_horizontal: '100px',
-                    button_html: '<button class="choice-button">%choice%</button>',
-                    on_finish: function(data) {
-                        data.catchIndex = catchIndex
-                        data.trial = "catchTrial"}
-                    };
-                    timeline.push(catchTrial);
-                    timeline.push(fixation);
-                };
-
-              if(j >= 26) {
-                var char_half2 = {
-                    type: 'html-button-response',
-                    stimulus: ['<div id="wrapper"><div id="leftStim"><img src="img/'+left_char_Stim+'"></div>'+'<div id="rightStim"><img src="img/'+right_char_Stim+'"></div></div>'],
-                    choices: ['<div id="wrapper"><div id="leftNumStyle">'+ (Math.round(option_pairs[leftNum][j] * 100) / 100).toFixed(2) + '</div></div>', '<div id="wrapper"><div id="rightNumStyle">'+(Math.round(option_pairs[rightNum][j] * 100) / 100).toFixed(2) + '</div></div>'],
-                    margin_horizontal: '100px',
-                    button_html: '<button class="choice-button">%choice%</button>',
-                    on_finish: function(data){
-                        data.trial = 'char_half2',
-                        data.optionL = left_char_Stim,
-                        data.optionR = right_char_Stim
-                    }
-                };
-                timeline.push(char_half2);
-                timeline.push(fixation);
-            };};
-      
-      
-      
-      
-     ////////////////////////////////////////////////////////////////////////////////////////////////////////////// 
-      
-      
-      
-            var nextTask = {
-                  type: "instructions",
-                  pages: ['<p>You have completed the first block of choices. We now want to ask you some questions. </p>'],
-                show_clickable_nav: true
-                };
-                    timeline.push(nextTask);      
-      
-    
-            var think_retroT1 = {
-              type: "instructions",
-              pages: ['<p>Consider what you wanted in the first block of choices.</p>'],
-            show_clickable_nav: true,
-                on_finish: function(data){
-                    data.trial = 'think_retro'
-                }
-            };
-            timeline.push(think_retroT1);  
-
-
-            var retro_charT1 = {
-                type: 'reconstruction',
-                stim_function: function_char_retro,
-                starting_value: randStart_retro_char,
-                key_increase: 'f',
-                key_decrease: 'j',
-                on_finish: function(data){
-                    data.trial = 'retro_char'
-                }
-            }
-            timeline.push(retro_charT1); 
-
-
-            var retro_confT1 = {
-                type: 'html-slider-response',
-                min: 1,
-                max: 7,
-                start: 4,
-                step: 1,
-                stimulus: "<p>How <b>confident</b> are you that you <br>accurately reported what you wanted? <br> <div class='flex-container'><div>Not at all</div><div>Extremely</div></div>",
-                labels: [1,2,3,4,5,6,7],
-                on_finish: function(data){
-                    data.trial = 'retro_confT1'
-                }
-            };
-              timeline.push(retro_confT1);  
-      
-      
-      
-    //////////////////////////////////////////////////////////////////////////////////////////////////////////////    
-    //////////////////////////////////////
-            /* motive induction */
-    //////////////////////////////////////
-      
-      
-      
-                   /* define instructions trial */
-    
-            
-                
-  
-
-      
-  
-            if(condition == 'motive') {
-                
-                
-              var motive_intro1 = {
-                  type: "instructions",
-                  pages: ['<p>We now want to provide some additional information. <br><br><b>Please read this information carefully, as you may be tested on it later in the study</b>.'],
-                show_clickable_nav: true
-                };
-                    timeline.push(motive_intro1); 
-      
-            var motive_intro2 = {
-                  type: "instructions",
-                  pages: ['<div class="instructions"><p>On the next page, we will share with you some information about Prolific users like yourself who recently completed a similar study of ours. <b></p><p>Specifically, you will learn how much, on average, the last 100 participants wanted to earn money for <font color="'+left_char_Color+'">'+left_char_avg+'</font> vs. <font color="'+right_char_Color+'">'+right_char_avg+'</font></b>.</p></div>'],
-                show_clickable_nav: true
-                };
-                    timeline.push(motive_intro2); 
-      
-            var motive_induction_html = function(param){
-            var size = 50 + Math.floor(param*250); /* min 50/350, max 300/350 */
-            var html = 
-               '<p style="font-family:arial;">Average amount that the last<br> 100 Prolific users wanted to earn money<br> for <b><font color="'+left_char_Color+'">'+left_char_avg+'</font></b> vs. <b><font color="'+right_char_Color+'">'+right_char_avg+'</font></b>:</p>'+
-            
-               '<div class="flex-container"><div><p class = "small" style="font-family:arial;"><br>more <b><font color="'+left_char_Color+'">'+left_char_ColorName+'</font></b> = want to <br>earn money for <br><font color="'+left_char_Color+'">'+left_char+'</font> more</p></div>'+'<div><p class = "small" style="font-family:arial;"><br>more <b><font color="'+right_char_Color+'">'+right_char_ColorName+'</font></b> = want to <br>earn money for <br><font color="'+right_char_Color+'">'+right_char+'</font> more</p></div></div>'+ 
-
-               '<div class="flex-container-manip";><div><p class = "small" style="font-family:arial;"><br><b><font color="'+tickColorLeft+'">average response</font></b></p></div>'+'<div><p class = "small" style="font-family:arial;"><br><b><font color="'+tickColorRight+'">average response</font></b></p></div></div>'+ 
-
-                    // Bar ticks, n = 51
-            '<p style="font-family:arial;font-size:100%;margin-bottom: 10px;margin-top: 0px"><span style="color: white;font-size:18px">--------</span><span style="color:white;font-size:18px">|</span><span style="color: white;font-size:18px">.....<span style="color:'+tickColorLeft+';font-size:18px">|</span><span style="color: white;font-size:18px">..................</span><span style="color: white;font-size:18px">|</span><span style="color: white;font-size:18px">..................<span style="color: '+tickColorRight+';font-size:18px">|</span><span style="color: white;font-size:18px">.....</span><span style="color: white;font-size:18px">|</span><span style="color: white;font-size:18px">--------</span></p></div>'+
-
-
-            '<div style="display: block; position: absolute; align: center; margin: auto; background-color:  '+right_char_Color+'; '+
-            'width: '+350+'px; height: '+30+'px;"></div></div>'+
-                '<div style="display: block; margin: auto; height: 50px;">'+
-
-            '<div style="display: block; position: absolute; align: center; margin: auto; background-color:  '+left_char_Color+'; '+
-            'width: '+size+'px; height: '+30+'px;"></div></div></div>'
-            return html;
-        }
-
-            var motive_induction = {
-                type: 'reconstruction_induction',
-                stim_function: motive_induction_html,
-                starting_value: motiveVal,
-                button_label: "Continue",
-                on_finish: function(data){
-                    data.condition = condition,
-                    data.trial = 'motive_induction1'
-                }
-            }
-                    timeline.push(motive_induction);  
-    
-      
-      
-            } 
-      
-    
-      
-      
-    // remove else to display all conditions for de-bugging
-            else if(condition == 'choice') {
-         
-            var choice_intro1 = {
-                  type: "instructions",
-                  pages: ['<p>We now want to provide some additional information. <br><br><b>Please read this information carefully, as you may be tested on it later in the study</b>.'],
-                show_clickable_nav: true
-                };
-                    timeline.push(choice_intro1); 
-      
-            var choice_intro2 = {
-              type: "instructions",
-              pages: ['<p>On the next page, we will share with you some information about Prolific users like yourself who recently completed a similar study of ours. <b></p><p>Specifically, you will learn the proportion of choices that the last 100 participants made to earn money for <font color="'+left_char_Color+'">'+left_char_avg+'</font> vs. <font color="'+right_char_Color+'">'+right_char_avg+'</font> on a specific trial</b>.</p>'],
-            show_clickable_nav: true
-            };
-                    timeline.push(choice_intro2); 
-      
-            var choice_induction_html = function(param){
-            var html = 
-               '<p>Proportion of the last 100 Prolific users who chose to <br>earn money for <b><font color="'+left_char_Color+'">'+left_char_avg+'</font></b> vs. <b><font color="'+right_char_Color+'">'+right_char_avg+'</font></b> on this trial:<br><br></p>'+'<img src="img/'+charAvgImg+'"'
-            
-            return html;
-        }
-            
-            var choice_induction1 = {
-                type: 'reconstruction_induction',
-                stim_function: choice_induction_html,
-                starting_value: motiveVal,
-                button_label: 'Continue',
-                on_finish: function(data){
-                    data.condition = condition,
-                    data.trial = 'motive_induction1'
-                }
-            }
-                timeline.push(choice_induction1); 
-            }
-      
-            
-      
-      
-          // remove else to display all conditions for de-buggings
-       
-            else if(condition == 'control') {
-    
-                
-            }
-      
-      
-      
-   //////////////////////////////////////////////////////////////////////////////////////////////////////////////  
-      
-      
-            var think_proT2 = {
-              type: "instructions",
-              pages: ['<p>You will soon begin the next set of choices.</p>'],
-            show_clickable_nav: true,
-                on_finish: function(data){
-                    data.trial = 'think_proT2'
-                }
-            };
-            timeline.push(think_proT2); 
-          
-          
-            var think_proT2 = {
-              type: "instructions",
-              pages: ['<p>Consider the different options you can pursue in the next set of choices.</p>'],
-            show_clickable_nav: true,
-                on_finish: function(data){
-                    data.trial = 'think_proT2'
-                }
-            };
-            timeline.push(think_proT2); 
-
-            var pro_charT2 = {
-                type: 'reconstruction',
-                stim_function: function_char,
-                starting_value: randStart_pro_char,
-                key_increase: 'f',
-                key_decrease: 'j',
-                on_finish: function(data){
-                    data.pros_q = 'True',
-                    data.trial = 'pro_charT2'
-                }
-            };
-            timeline.push(pro_charT2); 
-
-            var pro_char_confT2 = {
-                type: 'html-slider-response',
-                min: 1,
-                max: 7,
-                start: 4,
-                step: 1,
-                stimulus: "<p>How <b>confident</b> are you that you <br>accurately reported what you want? <br> <div class='flex-container'><div>Not at all</div><div>Extremely</div></div>",
-                labels: [1,2,3,4,5,6,7],
-                on_finish: function(data){
-                    data.trial = 'pro_char_confT2'
-                }
-            };
-            timeline.push(pro_char_confT2);
-
-      
-
-      
-            var nextTask = {
-              type: "instructions",
-              pages: ['<p>Press "Next" to proceed to the next set of choices when ready.</p>'],
-            show_clickable_nav: true,
-            on_finish: function(data){
-            data.trial = 'nextTask'
-        }
-            };
-                timeline.push(nextTask); 
-      
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////    
-            
-//CHAR SECOND 
-        for (j = 0; j < choice_set; j++) {
-
-                if(j < 26) {
-                    var char_half3 = {
-                        type: 'html-button-response',
-                        stimulus: ['<div id="wrapper"><div id="leftStim"><img src="img/'+left_char_Stim+'"></div>'+'<div id="rightStim"><img src="img/'+right_char_Stim+'"></div></div>'],
-                        choices: ['<div id="wrapper"><div id="leftNumStyle">'+ (Math.round(option_pairs[leftNum][j] * 100) / 100).toFixed(2) + '</div></div>', '<div id="wrapper"><div id="rightNumStyle">'+(Math.round(option_pairs[rightNum][j] * 100) / 100).toFixed(2) + '</div></div>'],
-                        margin_horizontal: '100px',
-                        button_html: '<button class="choice-button">%choice%</button>',
-                        on_finish: function(data){
-                            data.trial = 'char_half3',
-                            data.optionL = left_char_Stim,
-                            data.optionR = right_char_Stim
-                        }
-                    };
-                    timeline.push(char_half3);
-                    timeline.push(fixation);
-                };
-
-            
-            if(j == catchIndex) {
-                var catchTrial = {
-                    type: 'html-button-response',
-                    stimulus: ['<div id="wrapper"><div id="leftStim"><img src="img/'+youColor_pic+'"></div>'+'<div id="rightStim"><img src="img/'+youColor_pic+'"></div></div>'],
-                    choices: ['<div id="wrapper"><div id="leftNumStyle">'+ "50.00" + '</div></div>', '<div id="wrapper"><div id="rightNumStyle">'+ "0.00" + '</div></div>'],
-                    margin_horizontal: '100px',
-                    button_html: '<button class="choice-button">%choice%</button>',
-                    on_finish: function(data) {
-                        data.catchIndex = catchIndex
-                        data.trial = "catchTrial"}
-                    };
-                    timeline.push(catchTrial);
-                    timeline.push(fixation);
-                };
-
-                  if(j >= 26) {
-                    var char_half4 = {
-                        type: 'html-button-response',
-                        stimulus: ['<div id="wrapper"><div id="leftStim"><img src="img/'+left_char_Stim+'"></div>'+'<div id="rightStim"><img src="img/'+right_char_Stim+'"></div></div>'],
-                        choices: ['<div id="wrapper"><div id="leftNumStyle">'+ (Math.round(option_pairs[leftNum][j] * 100) / 100).toFixed(2) + '</div></div>', '<div id="wrapper"><div id="rightNumStyle">'+(Math.round(option_pairs[rightNum][j] * 100) / 100).toFixed(2) + '</div></div>'],
-                        margin_horizontal: '100px',
-                        button_html: '<button class="choice-button">%choice%</button>',
-                        on_finish: function(data){
-                            data.trial = 'char_half4',
-                            data.optionL = left_char_Stim,
-                            data.optionR = right_char_Stim
-                        }
-                    };
-                    timeline.push(char_half4);
-                    timeline.push(fixation);
-                };};      
-         
-      
-      
-      
-      
-      
-      
- // END OF CHOICE LOOP       
-      
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////    
-      
-
-    var fin = {
-      type: "instructions",
-      pages: ['<p>You have now completed the main section of the study. <br>We will now ask you a few more questions.</p>'],
-    show_clickable_nav: true,
-        on_finish: function(data){
-            data.trial = 'fin'
-        }
-    };
-    timeline.push(fin);  
-      
-
-    var think_retroT2 = {
-      type: "instructions",
-      pages: ['<p>Consider what you wanted in the second half of the choice task.</p>'],
-    show_clickable_nav: true,
-        on_finish: function(data){
-            data.trial = 'think_retroT2'
-        }
-    };
-    timeline.push(think_retroT2);  
-      
-      
-    var retro_charT2 = {
-        type: 'reconstruction',
-        stim_function: function_char_retro,
-        starting_value: randStart_retro_char,
-        key_increase: 'f',
-        key_decrease: 'j',
-        on_finish: function(data){
-            data.trial = 'retro_charT2'
-        }
+    	jsPsych.data.addProperties({attention_check: data.response.attention_check});
     }
-    timeline.push(retro_charT2); 
-      
-    
-    var retro_confT2 = {
-        type: 'html-slider-response',
-        min: 1,
-        max: 7,
-        start: 4,
-        step: 1,
-        stimulus: "<p>How <b>confident</b> are you that you <br>accurately reported what you wanted? <br> <div class='flex-container'><div>Not at all</div><div>Extremely</div></div>",
-        labels: [1,2,3,4,5,6,7],
-        on_finish: function(data){
-            data.trial = 'retro_confT2'
-        }
-    };
-      timeline.push(retro_confT2);  
-      
-      
+};
 
-    var additionalQs = {
-      type: "instructions",
-      pages: ['<p>We will now ask some new questions about<br>your thoughts and feelings about the study.</p>'],
-    show_clickable_nav: true,
-        on_finish: function(data){
-            data.trial = 'additionalQs'
-        }
-    };
-    timeline.push(additionalQs);  
-      
-      
-      
-// ADDITIONAL QUESTIONS
-      
-          // CHARITY FAIR
-      
-        var function_char_fairQ = function(param){
-        var size = 50 + Math.floor(param*250); /* min 50/350, max 300/350 */
-        var html = 
-           '<p style="font-family:arial;">At minimum, how much is a <b>fair amount</b><br> to want to earn money for <br><b><font color="'+left_char_Color+'">'+left_char+'</font></b> vs. <b><font color="'+right_char_Color+'">'+right_char+'</font></b> in this study?</p>'+
-            
-            '<p class = "small" style="font-family:arial;margin-top: 25px;margin-bottom:5px"><font size="2"></p>'+
-            
-           '<div class="flex-container"><div><p class = "small" style="font-family:arial;"><br>more <b><font color="'+left_char_Color+'">'+left_char_ColorName+'</font></b> = wanting to <br>earn money for <br><font color="'+left_char_Color+'">'+left_char+'</font> more</p></div>'+'<div><p class = "small" style="font-family:arial;"><br>more <b><font color="'+right_char_Color+'">'+right_char_ColorName+'</font></b> = wanting to <br>earn money for <br><font color="'+right_char_Color+'">'+right_char+'</font> more</p></div></div>'+ 
-            
-            
-                // Bar ticks, n = 51
-            '<p style="font-family:arial;font-size:100%;margin-bottom: 10px;margin-top: 0px"><span style="color: white;font-size:18px">--------</span><span style="color: white;font-size:18px">|</span><span style="color: white;font-size:18px">........<span style="color: white;font-size:18px">|</span><span style="color: white;font-size:18px">...............</span><span style="color: white;font-size:18px">|</span><span style="color: white;font-size:18px">...............<span style="color: white;font-size:18px">|</span><span style="color: white;font-size:18px">........</span><span style="color: white;font-size:18px">|</span><span style="color: white;font-size:18px">--------</span></p></div>'+
+// ***Welcome and Task 1 Instructions***
+
+var instructions_text = ['Welcome to the Introspective Accuracy Assessment (IAA)! <br></br>\
+	Please <b>do not</b> press the <b>back</b> button or <b>refresh</b> your browser during the study; if you do, you will have to start over. <br><br> Please click <b>Next</b> and read the following instructions carefully. <br></br>',
+
+ 	'<br></br>In this experiment, you will make a series of selections between two hotels. Each hotel will have a list of features, and will be presented to you in a table like the one below: <br></br><img src="hotel.jpg" width = "500" height = "400"></img><br></br> Your job is to pick the hotel you would most likely stay at out of the two options presented. <b>After you complete this task, we will ask you to reflect upon how you made your decisions. So while you are selecting hotels, please pay attention to what is playing a role in your selection and your strategy in selecting a hotel.</b> <br></br>',
+
+ 	'Please press <b>F</b> to select the hotel on the <b>LEFT</b> and <b>J</b> to select the hotel on the <b>RIGHT</b>. The hotel you select will be highlighted in red to indicate your choice.<br></br> There will be 100 trials in Part 1.<br><br>When you are ready to start, hit <b>Next</b>. <br></br>']
+
+var instructions = {
+	type: "instructions",
+	pages: instructions_text,
+	show_clickable_nav: true
+}
 
 
-            '<div style="display: block; position: absolute; align: center; margin: auto; background-color:  '+right_char_Color+'; '+
-            'width: '+350+'px; height: '+30+'px;"></div></div>'+
-                '<div style="display: block; margin: auto; height: 50px;">'+
+// Decision trial loop 
+var trTrials = new Array(nTrainingTrials);
 
-            '<div style="display: block; position: absolute; align: center; margin: auto; background-color:  '+left_char_Color+'; '+
-            'width: '+size+'px; height: '+30+'px;"></div></div></div>'
-            return html;
-            }
-    
-    
-        // GIFTCARD FAIR
-    
-//    var function_gc_fairQ = function(param){
-//        var size = 50 + Math.floor(param*250); /* min 50/350, max 300/350 */
-//        var html = 
-//           '<p style="font-family:arial;">At minimum, how much is a <b>fair amount</b> <br>to want to earn yourself a <b><font color="'+left_gc_Color+'">'+left_gc+'</font></b> vs.<br> <b><font color="'+right_gc_Color+'">'+right_gc+'</font></b> gift card in this study?</p>'+
-//            
-//            '<p class = "small" style="font-family:arial;margin-top: 25px;margin-bottom:5px"><font size="2"></p>'+
-//            
-//           '<div class="flex-container"><div><p class = "small" style="font-family:arial;"><br>more <b><font color="'+left_gc_Color+'">'+left_gc_ColorName+'</font></b> = wanting to <br>earn money for <br><font color="'+left_gc_Color+'">'+left_gc+'</font> more</p></div>'+'<div><p class = "small" style="font-family:arial;"><br>more <b><font color="'+right_gc_Color+'">'+right_gc_ColorName+'</font></b> = wanting to <br>earn money for <br><font color="'+right_gc_Color+'">'+right_gc+'</font> more</p></div></div>'+ 
-//            
-//                    // Bar ticks, n = 51
-//            '<p style="font-family:arial;font-size:100%;margin-bottom: 10px;margin-top: 0px"><span style="color: white;font-size:18px">--------</span><span style="color: white;font-size:18px">|</span><span style="color: white;font-size:18px">........<span style="color: white;font-size:18px">|</span><span style="color: white;font-size:18px">...............</span><span style="color: white;font-size:18px">|</span><span style="color: white;font-size:18px">...............<span style="color: white;font-size:18px">|</span><span style="color: white;font-size:18px">........</span><span style="color: white;font-size:18px">|</span><span style="color: white;font-size:18px">--------</span></p></div>'+
-//
-//
-//            '<div style="display: block; position: absolute; align: center; margin: auto; background-color:  '+right_gc_Color+'; '+
-//            'width: '+350+'px; height: '+30+'px;"></div></div>'+
-//                '<div style="display: block; margin: auto; height: 50px;">'+
-//
-//            '<div style="display: block; position: absolute; align: center; margin: auto; background-color:  '+left_gc_Color+'; '+
-//            'width: '+size+'px; height: '+30+'px;"></div></div></div>'
-//            return html;
-//    }
-//    
-    
-    var char_fairQ = {
-        type: 'reconstruction',
-        stim_function: function_char_fairQ,
-        starting_value: randStart_retro_char,
-        key_increase: 'f',
-        key_decrease: 'j',
-        on_finish: function(data){
-            data.trial = 'char_fairQ'
-        }
-    }
-    timeline.push(char_fairQ);    
-      
-//    var gc_fairQ = {  // Excluding this question because it doesn't make sense
-//        type: 'reconstruction',
-//        stim_function: function_gc_fairQ,
-//        starting_value: randStart_retro_char,
-//        key_increase: 'f',
-//        key_decrease: 'j',
-//        on_finish: function(data){
-//            data.trial = 'gc_fairQ'
-//        }
-//    }
-//    timeline.push(gc_fairQ);   
+for (var j = 0; j < nTrainingTrials; j++) {
+		trTrials[j] = new Array(2);
+
+		// again, my RA did this coding in a horrible way lol
+		word1 = hotels[pairs[j][0]][0];
+		word2 = hotels[pairs[j][1]][0];
+		word3 = hotels[pairs[j][0]][1];
+		word4 = hotels[pairs[j][1]][1];
+		word5 = hotels[pairs[j][0]][2];
+		word6 = hotels[pairs[j][1]][2];
+		word7 = hotels[pairs[j][0]][3];
+		word8 = hotels[pairs[j][1]][3];
+		word9 = hotels[pairs[j][0]][4];
+		word10 = hotels[pairs[j][1]][4];
+		word11 = hotels[pairs[j][0]][5];
+		word12 = hotels[pairs[j][1]][5];
+		word13 = hotels[pairs[j][0]][6];
+		word14 = hotels[pairs[j][1]][6];
+		word15 = hotels[pairs[j][0]][7];
+		word16 = hotels[pairs[j][1]][7];
+
+		// randomly generating two homes
+		// randomly sampling which attributes to use for this trial
+		// randomly sampling the values of each home on each of those attributes
+
+	trTrials[j][0] = {
+		type: 'html-keyboard-response',
+		stimulus: "<div align='center'><table border = 2px solid black><thead></tr><tr><th></th><td><b>Hotel A</b></td><td><b>Hotel B</b></td><tr><th>Room Size</th><td>"+word1+"</td><td>"+word2+"</td><tr><th>Free Continental Breakfast?</th><td>"+word3+"</td><td>"+word4+"</td></tr><tr><th>Pool</th><td>"+word5+"</td><td>"+word6+"</td></tr><tr><th>Jacuzzi</th><td>"+word7+"</td><td>"+word8+"</td></tr><tr><th>Exercise Room</th><td>"+word9+"</td><td>"+word10+"</td></tr><tr><th>Security Guard</th><td>"+word11+"</td><td>"+word12+"</td></tr><tr><th>Restaurant Nearby</th><td>"+word13+"</td><td>"+word14+"</td></tr><tr><th>Room Service</th><td>"+word15+"</td><td>"+word16+"</td></tr></table>",
+		choices: ['f', 'j'],
+		data: {word1: word1, word2: word2, word3: word3, word4: word4, word5: word5, word6: word6, word7: word7, word8: word8, word9: word9, word10: word10, word11: word11, word12: word12, word13: word13, word14: word14, word15: word15, word16: word16},
+		prompt: 'Click <b>F</b> for <b>Hotel A</b> and <b>J</b> for <b>Hotel B</b>',
+		on_finish: function(data) {
+			choice = data.response == 'j' ? 1 : 0; 
+
+			jsPsych.data.addProperties({choice: choice});
+		}
+	};
+	
+	trTrials[j][1] = {
+		type: 'instructions',
+		data: {which_trial: j},
+		pages: function() {
+			var cur_choice = jsPsych.data.get().last().values()[0].choice; 
+			var word1 = jsPsych.data.get().last().values()[0].word1;
+			var word2 = jsPsych.data.get().last().values()[0].word2;
+			var word3 = jsPsych.data.get().last().values()[0].word3;
+			var word4 = jsPsych.data.get().last().values()[0].word4;
+			var word5 = jsPsych.data.get().last().values()[0].word5;
+			var word6 = jsPsych.data.get().last().values()[0].word6;
+			var word7 = jsPsych.data.get().last().values()[0].word7;
+			var word8 = jsPsych.data.get().last().values()[0].word8;
+			var word9 = jsPsych.data.get().last().values()[0].word9;
+			var word10 = jsPsych.data.get().last().values()[0].word10;
+			var word11 = jsPsych.data.get().last().values()[0].word11;
+			var word12 = jsPsych.data.get().last().values()[0].word12;
+			var word13 = jsPsych.data.get().last().values()[0].word13;
+			var word14 = jsPsych.data.get().last().values()[0].word14;
+			var word15 = jsPsych.data.get().last().values()[0].word15;
+			var word16 = jsPsych.data.get().last().values()[0].word16;
+			var colors = cur_choice == 0 ? ['red','black'] : ['black','red']; 
+			return(["<div align='center'><table border = 2px solid black><thead></tr><tr><th></th><td style = 'border: 2px solid "+colors[0]+"'><b>Hotel A</b></td><td style = 'border: 2px solid "+colors[1]+"'><b>Hotel B</b></td><tr><th>Room Size</th><td>"+word1+"</td><td>"+word2+"</td><tr><th>Free Continental Breakfast?</th><td>"+word3+"</td><td>"+word4+"</td></tr><tr><th>Pool</th><td>"+word5+"</td><td>"+word6+"</td></tr><tr><th>Jacuzzi</th><td>"+word7+"</td><td>"+word8+"</td></tr><tr><th>Exercise Room</th><td>"+word9+"</td><td>"+word10+"</td></tr><tr><th>Security Guard</th><td>"+word11+"</td><td>"+word12+"</td></tr><tr><th>Restauraunt Nearby</th><td >"+word13+"</td><td>"+word14+"</td></tr><tr><th>Room Service</th><td>"+word15+"</td><td>"+word16+"</td></tr></table>"])
+		},
+		is_html: true,
+		show_clickable_nav: true,
+		allow_keys: false,
+		on_load: function() {
+			curTrial = jsPsych.data.get().last().values()[0].which_trial;
+			curTrial = curTrial[0].curTrial;
+			return ["<p style='font-size: 10px'>Trial " + (curTrial + 1) + " out of " + nTrainingTrials + " completed.</p>"];
+		},
+		on_finish: function(data) {
+			s1_data = {
+				subject: data.subject,
+				version: data.version,
+				assignmentId: data.assignmentId,
+				trial: data.which_trial,
+				hotel1_id: pairs[data.which_trial][0],
+				hotel2_id: pairs[data.which_trial][1],
+				hotel1_attributes: hotels[pairs[data.which_trial][0]].join(),
+				hotel2_attributes: hotels[pairs[data.which_trial][1]].join(),
+				choice: data.choice,
+				rt: data.rt
+			}
+
+			save_data(s1_data, 's1');
+		}
+	};
+};
+
+trTrials = _.flatten(trTrials);
+
+// ***Attribute Rating Task***
+
+var label = ['0 <br></br> No Effect', '1', '2', '3', '4', '5 <br></br> Average Effect', '6', '7', '8', '9', '10 <br></br> Major Effect']
+var prompt = '<br></br>On a scale of 0-10, how much much did this feature contribute to your hotel decision?<br></br>' 
+
+var attribute_instructions_text = ['Thank you for completing the first task, in the next section, we are going to ask that you reflect on the decisions you just made in part 1. Specifically, we are going to ask how much each feature listed from the hotels contributed to your decision on a scale of 0-10. An example will appear on the next page: <br></br>', 
+
+	'For instance, this is an example of what you will be presented: <br></br><img src="attributes.jpg" width = "875" height = "325"></img><br></br> If we ask you how much the room size contributed to your decision, and it had zero effect on your decision, you would move the slider to 0. However, if it contributed an enormous amount to your decision, then move the slider to 10 or anywhere in between that you believe fits that said effect.<br></br>',
+	
+	'This section will have 8 questions, and will be the final section of the study. <br></br> When you are ready, click <b>Next</b>. <br></br>']
+
+// label 0, 5, and 10. like a likert scale. 
+var attribute_instructions = {
+	type: 'instructions',
+	pages: attribute_instructions_text,
+	show_clickable_nav: true
+};
+
+var attribute_ratings = new Array(9);
+var attribute_questions = ['<p>Room Size</p>', '<p>If continental breakfast was included</p>', '<p>Whether or not there was a pool</p>', '<p>Whether or not there was a jacuzzi</p>', '<p>Whether or not there was an exercise room</p>', '<p>If there was a security guard</p>', '<p>Restaurant Nearby</p>', '<p>If room service was offered</p>'];
+var attribute_rating_questions = _.shuffle(attribute_questions)
+
+for (var i = 0; i < 8; i++) {
+	attribute_ratings[i] = {
+	  	type: 'html-slider-response',
+	  	stimulus: attribute_rating_questions[i],
+	  	labels: label,
+	 	prompt: prompt,
+	 	data: {which_trial: i},
+	 	require_movement: true,
+	 	on_finish: function(data) {
+	 		s2_data = {
+				subject: data.subject,
+				version: data.version,
+				assignmentId: data.assignmentId,
+				trial: data.which_trial,
+	 			attribute: attribute_rating_questions[data.which_trial],
+	 			rating: data.response,
+	 			rt: data.rt
+	 		}
+	 	save_data(s2_data, 's2');
+		}
+	};
+};
+
+
+// ***Final Questions, Demographics, and Debriefing***
  
-          
-// CHARITY AVERAGE PERSON
-      
-              var function_char_avgPerson = function(param){
-        var size = 50 + Math.floor(param*250); /* min 50/350, max 300/350 */
-        var html = 
-           '<p style="font-family:arial;"><b>Think about the average person.</b><br>How much do you think they would want <br> to earn money for <br><b><font color="'+left_char_Color+'">'+left_char_avg+'</font></b> vs. <b><font color="'+right_char_Color+'">'+right_char_avg+'</font></b> in the study?</p>'+
-            
-            '<p class = "small" style="font-family:arial;margin-top: 25px;margin-bottom:5px"><font size="2"></p>'+
-            
-           '<div class="flex-container"><div><p class = "small" style="font-family:arial;"><br>more <b><font color="'+left_char_Color+'">'+left_char_ColorName+'</font></b> = would want to <br>earn money for <br><font color="'+left_char_Color+'">'+left_char_avg+'</font> more</p></div>'+'<div><p class = "small" style="font-family:arial;"><br>more <b><font color="'+right_char_Color+'">'+right_char_ColorName+'</font></b> = would want to <br>earn money for <br><font color="'+right_char_Color+'">'+right_char_avg+'</font> more</p></div></div>'+ 
-            
-                // Bar ticks, n = 51
-            '<p style="font-family:arial;font-size:100%;margin-bottom: 10px;margin-top: 0px"><span style="color: white;font-size:18px">--------</span><span style="color: white;font-size:18px">|</span><span style="color: white;font-size:18px">........<span style="color: white;font-size:18px">|</span><span style="color: white;font-size:18px">...............</span><span style="color: white;font-size:18px">|</span><span style="color: white;font-size:18px">...............<span style="color: white;font-size:18px">|</span><span style="color: white;font-size:18px">........</span><span style="color: white;font-size:18px">|</span><span style="color: white;font-size:18px">--------</span></p></div>'+
+var strategy = {
+	type: 'survey-text',
+	questions: [
+	{prompt: "Could you now describe, in your own words, how you made your decisions in choosing a hotel?", name: 'strategy', rows: 15, columns: 120},
+	],
+	on_finish: function(data) {
+		jsPsych.data.addProperties({strategy: data.response.strategy});
+	}
+};
 
+var comments = {
+	type: 'survey-text',
+	questions: [{prompt: "Do you have any comments about the study?", name: 'comments', rows: 15, columns: 120},
+	],
+	preamble: 'Final question!', 
+	on_finish: function(data) {
+		jsPsych.data.addProperties({comments: data.response.comments});
+	}
+};
 
-            '<div style="display: block; position: absolute; align: center; margin: auto; background-color:  '+right_char_Color+'; '+
-            'width: '+350+'px; height: '+30+'px;"></div></div>'+
-                '<div style="display: block; margin: auto; height: 50px;">'+
+var demo = {
+	type: 'survey-text',
+	questions: [
+		{prompt: "Gender?", name: 'gender'},
+		{prompt: "Age?", name: "age"}
+	],
+	on_finish: function(data) {
+		demo_data = {
+			subject: data.subject,
+			version: data.version,
+			assignmentId: data.assignmentId,
+			strategy: data.strategy,
+			comments: data.comments,
+			gender: data.response.gender, 
+			age: data.response.age,
+			attention_check: data.attention_check,
+			total_time: Date.now() - start_instructions
+		}
 
-            '<div style="display: block; position: absolute; align: center; margin: auto; background-color:  '+left_char_Color+'; '+
-            'width: '+size+'px; height: '+30+'px;"></div></div></div>'
-            return html;
-            }
-              
-              
-        var char_avgPerson = {
-        type: 'reconstruction',
-        stim_function: function_char_avgPerson,
-        starting_value: randStart_retro_char,
-        key_increase: 'f',
-        key_decrease: 'j',
-        on_finish: function(data){
-            data.trial = 'char_avgPerson'
-        }
-    }
-    timeline.push(char_avgPerson);   
-    
-// GIFTCARD AVERAGE PERSON
-    
-//    var function_gc_avgPerson = function(param){
-//        var size = 50 + Math.floor(param*250); /* min 50/350, max 300/350 */
-//        var html = 
-//           '<p style="font-family:arial;">Think about the average person.</b><br>How much do you think they would want <br>to earn yourself a <b><font color="'+left_gc_Color+'">'+left_gc+'</font></b> vs.<br> <b><font color="'+right_gc_Color+'">'+right_gc+'</font></b> gift card in this study?</p>'+
-//            
-//            '<p class = "small" style="font-family:arial;margin-top: 25px;margin-bottom:5px"><font size="2"></p>'+
-//            
-//           '<div class="flex-container"><div><p class = "small" style="font-family:arial;"><br>more <b><font color="'+left_gc_Color+'">'+left_gc_ColorName+'</font></b> = would want to <br>earn money for <br><font color="'+left_gc_Color+'">'+left_gc+'</font> more</p></div>'+'<div><p class = "small" style="font-family:arial;"><br>more <b><font color="'+right_gc_Color+'">'+right_gc_ColorName+'</font></b> = would want to <br>earn money for <br><font color="'+right_gc_Color+'">'+right_gc+'</font> more</p></div></div>'+ 
-//            
-//                    // Bar ticks, n = 51
-//            '<p style="font-family:arial;font-size:100%;margin-bottom: 10px;margin-top: 0px"><span style="color: white;font-size:18px">--------</span><span style="color: white;font-size:18px">|</span><span style="color: white;font-size:18px">........<span style="color: white;font-size:18px">|</span><span style="color: white;font-size:18px">...............</span><span style="color: white;font-size:18px">|</span><span style="color: white;font-size:18px">...............<span style="color: white;font-size:18px">|</span><span style="color: white;font-size:18px">........</span><span style="color: white;font-size:18px">|</span><span style="color: white;font-size:18px">--------</span></p></div>'+
-//
-//
-//            '<div style="display: block; position: absolute; align: center; margin: auto; background-color:  '+right_gc_Color+'; '+
-//            'width: '+350+'px; height: '+30+'px;"></div></div>'+
-//                '<div style="display: block; margin: auto; height: 50px;">'+
-//
-//            '<div style="display: block; position: absolute; align: center; margin: auto; background-color:  '+left_gc_Color+'; '+
-//            'width: '+size+'px; height: '+30+'px;"></div></div></div>'
-//            return html;
-//    }
-//    
-//    
-      
-//    var gc_avgPerson = {
-//        type: 'reconstruction',
-//        stim_function: function_gc_avgPerson,
-//        starting_value: randStart_retro_char,
-//        key_increase: 'f',
-//        key_decrease: 'j',
-//        on_finish: function(data){
-//            data.trial = 'gc_avgPerson'
-//        }
-//    }
-//    timeline.push(gc_avgPerson);   
-//      
-//      
-      
-      
-      
-// Open-Ended Questions
-      
-      
-    // randomizer
-      
-    var openQ_first = jsPsych.randomization.sampleWithoutReplacement(['U', 'RC'], 1)[0];
+		save_data(demo_data, 'demo');
+	}
+};
 
-    // intro (save order)
-    var openQ_intro = {
-      type: "instructions",
-      pages: ['<div class="instructions"><p>Earlier, we asked you how much you wanted certain incentives relative to others. We now want to ask you to briefly elaborate on why.</p></div>'],
-    show_clickable_nav: true,
-    on_finish: function(data) {
-        data.openQ_first = openQ_first
-        data.trial = "openQ_intro"}
-    };
-    timeline.push(openQ_intro);  
-  
-
-    if(openQ_first == 'U') {
-        
-        var openMtv_char_YOU = { // FIRST CHAR IS U
-          type: 'survey-text',
-          questions: [
-            {prompt: "<p>Could you briefly explain why you wanted (or did not want) to earn money for <b>yourself</b>",rows: 10, columns: 100}
-          ],
-        on_finish: function(data){
-            data.trial = 'openMtv_char_YOU'
-        }
-        }; 
-            timeline.push(openMtv_char_YOU);
-        
-        var openMtv_char_RC = {
-          type: 'survey-text',
-          questions: [
-            {prompt: "<p>Could you briefly explain why you wanted (or did not want) to earn money for <b>the Red Cross</b>",rows: 10, columns: 100}
-          ],
-        on_finish: function(data){
-            data.trial = 'openMtv_char_RC'
-        }
-        }; 
-            timeline.push(openMtv_char_RC);
-        
-      
-        
-    } else if (openQ_first == 'RC') {
-        
-        
-        var openMtv_char_RC = { // FIRST CHAR IS RC
-          type: 'survey-text',
-          questions: [
-            {prompt: "<p>Could you briefly explain why you wanted (or did not want) to earn money for <b>the Red Cross</b>",rows: 10, columns: 100}
-          ],
-        on_finish: function(data){
-            data.trial = 'openMtv_char_RC'
-        }
-        }; 
-            timeline.push(openMtv_char_RC);
-        
-        var openMtv_char_YOU = { 
-          type: 'survey-text',
-          questions: [
-            {prompt: "<p>Could you briefly explain why you wanted (or did not want) to earn money for <b>yourself</b>",rows: 10, columns: 100}
-          ],
-        on_finish: function(data){
-            data.trial = 'openMtv_char_YOU'
-        }
-        }; 
-            timeline.push(openMtv_char_YOU);
-    
-        
-        
-    };
-      
-//      
-      
- // Memory Questions    
-        
-            
-          var mem_char = {
-        type: 'survey-text',
-        questions: [
-            {prompt:"<div class='instructions'><p>Please think back to the choices you made earlier.</p><p>We would like you to remember, on average across your choices between earning money for yourself and money for the Red Cross, <b>what percent of your choices were choices to earn money for the Red Cross</b>.</p><p>You will receive an additional monetary bonus (separate from other incentives in this study) that depends on how accurate your response is. The closer your response is to your actual average choice percent, the more money you will earn. If you report exactly the correct amount, you will receive 100% of the bonus. For each 1% off your response is from your actual average, your bonus will decrease by 2%.</p><p>Enter the choice percent as a number (no letters or symbols) between 0 and 100</div>",rows: 1, columns: 3}],
-        on_finish: function(data){
-            data.trial = 'mem_char'
-        }
-    };
-    timeline.push(mem_char);
-    
-    
-      
-      
-      
-// ADDITIONAL QUESTIONS
-      
-
-    var pressure = {
-        type: 'html-slider-response',
-        min: 1,
-        max: 7,
-        start: 4,
-        step: 1,
-        stimulus: "<p>When asked about what you wanted in the study,<br> did you feel any personal or social pressure<br> to respond a certain way?<br></p><div class='flex-container'><div>Not at all</div><div>Very much so</div></div>",
-        labels: [1,2,3,4,5,6,7],
-        on_finish: function(data){
-            data.trial = 'pressure'
-        }
-    };
-    timeline.push(pressure);
-      
-      
-      
-      
-    var DG_exp = {
-        type: 'html-slider-response',
-        min: 1,
-        max: 5,
-        start: 3,
-        step: 1,
-        stimulus: "<p>Have you participated in similar studies in which<br> you had to choose between money for yourself or a charity?</p>",
-        labels: ["1<br> <font size='-2'>Never</font>","2<br> <font size='-2'>A few</font>","3<br> <font size='-2'>More than a few</font>","4<br> <font size='-2'>Many</font>","5 <br><font size='-2'>Countless</font>"],
-        slider_width: 400,
-        prompt: "",
-        on_finish: function(data){
-            data.trial = 'DG_exp'
-        }
-    };
-    timeline.push(DG_exp); 
-      
-//    var GC_exp = {
-//        type: 'html-slider-response',
-//        min: 1,
-//        max: 5,
-//        start: 3,
-//        step: 1,
-//        stimulus: "<p>Have you participated in similar studies in which<br> you had to choose between different gift cards for yourself?</p>",
-//        labels: ["1<br> <font size='-2'>Never</font>","2<br> <font size='-2'>A few</font>","3<br> <font size='-2'>More than a few</font>","4<br> <font size='-2'>Many</font>","5 <br><font size='-2'>Countless</font>"],
-//        slider_width: 400,
-//        prompt: "",
-//        on_finish: function(data){
-//            data.trial = 'GC_exp'
-//        }
-//    };
-//    timeline.push(GC_exp); 
-//      
-//      
-      
-      
-      
-      
 // DEMOGRAPHICS    
       
     var gen = {
@@ -1634,9 +373,7 @@ timeline.push(attncheck_fb);
             data.trial = 'gen'
         }
     };
-    timeline.push(gen);  
-      
-      
+
     var age = {
           type: 'survey-text',
           questions: [
@@ -1645,8 +382,8 @@ timeline.push(attncheck_fb);
         on_finish: function(data){
             data.trial = 'age'
         }
-        }; 
-    timeline.push(age);
+    }; 
+
       
     var race = {
         type: 'html-button-response',
@@ -1656,7 +393,7 @@ timeline.push(attncheck_fb);
             data.trial = 'race'
         }
     };
-    timeline.push(race); 
+
       
       
     var nativeEng = {
@@ -1667,7 +404,7 @@ timeline.push(attncheck_fb);
             data.trial = 'nativeEng'
         }
     };
-    timeline.push(nativeEng); 
+
       
     var edu = {
         type: 'html-button-response',
@@ -1677,7 +414,7 @@ timeline.push(attncheck_fb);
             data.trial = 'edu'
         }
     };
-    timeline.push(edu); 
+
       
     var income = {
         type: 'html-button-response',
@@ -1687,232 +424,66 @@ timeline.push(attncheck_fb);
             data.trial = 'income'
         }
     };
-    timeline.push(income); 
+
+var debrief = {
+	type: 'instructions',
+	pages: ["Thank you for your participation. In this study, our goal was to measure introspective accuracy. <br></br> To do this, we have a series of decision models we are using that can objectively pull the weight of how much you valued each feature in your decisions between the hotels. We utilized multiattribute decisions (hotels) to gather those weights, then asked you how much you beleived you weighed them to see if what you self-reported lined up with what our models predict based on your decisions. <br></br> We hypothesized that people would not be very accurate in their introspective assessments, and from this data, we aim to build interventions that can assist in helping people understand their decisions in broader societal contexts. <br></br>"],
+	show_clickable_nav: true
+};
+
+var check_end = function(elem) {
+	if ($('#end_checkbox').is(':checked')) {
+		return true;
+	} else {
+		alert("Make sure to copy the code.");
+		return false;
+	}
+	return false;
+};
+
+var end = {
+	type: 'external-html',
+	url: "end.php?turkcode=" + turk_code + "&test=1",
+	cont_btn: "end",
+	check_fn: check_end,
+	force_refresh: true
+};
+
+// ***Timeline***
+
+var timeline = []
+
+timeline.push(welcome);
+timeline.push(get_id_loop);
+//timeline.push(consent_block);
+timeline.push(attnCheck1);
+timeline.push(instructions);
+for (var j = 0; j < nTrainingTrials_to_use; j++) {
+	timeline.push(trTrials[j]);
+}
+timeline.push(attribute_instructions)
+for (var i = 0; i < 8; i++) {
+	timeline.push(attribute_ratings[i]);
+}
+timeline.push(strategy)
+timeline.push(comments)
+timeline.push(demo)
     
+/// DEMOS///
+timeline.push(gen);
+timeline.push(age);
+timeline.push(race); 
+timeline.push(nativeEng); 
+timeline.push(edu); 
+timeline.push(income); 
+//////////////
     
-    var charityOpinion = {
-        type: 'html-button-response',
-        stimulus: 'How reliable do you think Red Cross is as an organization in using donations for helping people?<br>',
-        choices: ['Not at all reliable', 'Somewhat reliable','Very reliable'],
-        on_finish: function(data){
-            data.trial = 'charityOpinion'
-        }
-    };
-    timeline.push(charityOpinion); 
-      
-      
-      
-// EXIT QUESTIONS  
-            
-      
-      
-   var mtvScale = {
-          type: 'survey-text',
-          questions: [
-            {prompt: "We asked you to report how much you wanted<br> one option over another using <b>colored bars</b>. We would <br>appreciate any feedback on your experience responding this way.<br><br> Please use this space to share any thoughts about this.",rows: 10, columns: 100}
-          ],
-        on_finish: function(data){
-            data.trial = 'mtvScale'
-        }
-        }; 
-    timeline.push(mtvScale);
-      
-      
-    var believable = {
-        type: 'html-slider-response',
-        min: 1,
-        max: 5,
-        start: 3,
-        step: 1,
-        stimulus: "<div class='longQ'><p>In today's study, you made choices involving various incentives including money for yourself or charity. You were informed that for a subset of participants in this study, one of these choices really counts. <br><br><b>Did we communicate the fact that you could earn real money or money for charity, clearly and transparently enough in our instructions?</b><br><br>Please answer this question honestly and openly. This will help us to discover imperfections in our instructions.</p></div>",
-        labels: ["1<br> <font size='-2'>No, not at all</font>",2,3,4,"5 <br><font size='-2'>Yes, fully</font>"],
-        slider_width: 400,
-        prompt: "",
-        on_finish: function(data){
-            data.trial = 'believable'
-        }
-    };
-    timeline.push(believable);
-      
-      
-    var scale = [
-            "1<br>Strongly<br>disagree",
-            "2", 
-            "3", 
-            "4", 
-            "5", 
-            "6", 
-            "7<br>Strongly<br>agree",
-        ];
+timeline.push(debrief)
+//timeline.push(end);
 
-      
+jsPsych.init({
+	timeline: timeline
+});
 
-    var openSkeptic = {
-          type: 'survey-text',
-          questions: [
-            {prompt: "<div class='longQ'>If anything was unclear or during the study you had other doubts or remarks about any part of our instructions, please let us know why:</div>",rows: 10, columns: 100}
-          ],
-        on_finish: function(data){
-            data.trial = 'openSkeptic'
-        }
-        }; 
-    timeline.push(openSkeptic);
-      
-      
-    var parh_scale1 = {
-        type: 'survey-likert',
-        preamble: 
-            '<div style="padding-top: 50px; width: 850px; font-size:16px">'
-            +'<p>Please rate how much you <b>agree or disagree</b> with each of the following statements:',
-        questions: [
-            {prompt: '<b>1. I knew what the researchers were investigating in this research.</b>',
-            name: 'parh1',
-            labels: scale},
-            {prompt: '<b>2. I wasn’t sure what the researchers were trying to demonstrate in this research.</b>',
-            name: 'parh2',
-            labels: scale},
-        ],
-        randomize_question_order: false,
-        scale_width: 500,
-        on_finish: function(data){
-            data.trial = 'parh_scale1'
-        }
-    };
-    timeline.push(parh_scale1);
-      
-      
-    var parh_scale2 = {
-        type: 'survey-likert',
-        preamble: 
-            '<div style="padding-top: 50px; width: 850px; font-size:16px">'
-            +'<p>Please rate how much you <b>agree or disagree</b> with each of the following statements:',
-        questions: [
-            {prompt: '<b>3. I had a good idea about what the hypotheses were in this research.</b>',
-            name: 'parh3',
-            labels: scale},
-            {prompt: '<b>4. I was unclear about exactly what the researchers were aiming to prove in this research.</b>',
-            name: 'parh4',
-            labels: scale},
-        ],
-        randomize_question_order: false,
-        scale_width: 500,
-        on_finish: function(data){
-            data.trial = 'parh_scale2'
-        }
-    };
-    timeline.push(parh_scale2);
-      
-      
-    var manipulation_comp = {
-        type: 'html-button-response',
-        stimulus: 'Earlier in this study, did you learn information about other Prolific users?<br>',
-        choices: ['Yes, I received info about what other users chose', 'Yes, I received info about what other users wanted', 'No, I received no info about other Prolific users'],
-        on_finish: function(data){
-            data.trial = 'manipulation_comp'
-        }
-    };
-    timeline.push(manipulation_comp); 
-      
-      
-    var finalWord = {
-          type: 'survey-text',
-          questions: [
-            {prompt: "Apart from this, do you have any other remarks<br> or comments about today’s study?",rows: 10, columns: 100}
-          ],
-        on_finish: function(data){
-            data.trial = 'finalWord'
-        }
-        }; 
-    timeline.push(finalWord);
-      
- 
-    var prolific_id = {
-        type: 'survey-text',
-        questions: [
-            {prompt: '<br><p><b>Please copy and paste your Prolific ID into the box below:</b>',
-            name: 'prolific_id',
-            required: true},],
-        on_finish: function(data){
-            data.trial = 'prolific_id'
-        }
-        
-    };
-    timeline.push(prolific_id);
-      
-    var get_ready = {
-      type: "instructions",
-      pages: ['<p>The next screen has the final instructions for completing the study.<br>Please folow each step carefully to ensure we receive your survey. Thanks!</p>'],
-    show_clickable_nav: true,
-        on_finish: function(data){
-            data.trial = 'get_ready'
-        }
-    };
-    timeline.push(get_ready); 
-
-      
-    var platformLink = 'https://app.prolific.co/submissions/complete?cc=1E12AFFE';
-    var conclusion = {
-        type: 'html-button-response',
-        stimulus: '<p>To complete the study, first copy the link below <b>and then click the SUBMIT button</b>.</p><p>Then paste the link in your browser to recieve your payment. Thank you!</p><p><b>'+platformLink+'</b></p><br>',
-        choices: ['<font size="+2"><b>SUBMIT</b></font>'],
-        on_finish: function(data){
-            data.trial = 'conclusion'
-        }
-    };
-    timeline.push(conclusion);
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-// DEBUGGING
-      
-    //console.log(timeline);
-    //console.log(catchIndex);
-      
-      
-      
-        var images = ['img/you_blue.png', 'img/you_beige.png', 'img/char.png','img/ss_choice_char.png','img/choiceAvg_left_self_blue.png','img/choiceAvg_left_self_beige.png','img/choiceAvg_right_self_blue.png','img/choiceAvg_right_self_beige.png'];
-        
-      
-      
-// WRITE TO DATABASE
-      
-      //no redirect {uncomment last trial too}
-        jsPsych.init({
-            timeline: timeline, 
-            preload_images: images,
-            show_preload_progress_bar: false,
-            on_finish: function() {
-//            jsPsych.data.displayData();
-                firebase.database().ref(firebase.auth().currentUser.uid).set({
-                    data: jsPsych.data.get().values()
-                })
-            }
-        });
-      
-//      //with redirect  (data writing is failing with this, redirect is working)
-//        jsPsych.init({
-//            timeline: timeline, 
-//            preload_images: images,
-//            show_preload_progress_bar: false,
-//            on_finish: function(){
-//                window.location.replace("https://app.prolific.co/submissions/complete?cc=1E12AFFE");
-//            },
-//            on_close: function() {
-//                firebase.database().ref(firebase.auth().currentUser.uid).set({
-//                    data: jsPsych.data.get().values()
-//                })
-//            }
-//        });
-      
-
-      
-  </script>
+</script>
 </html>
