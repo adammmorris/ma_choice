@@ -104,7 +104,7 @@ var start_instructions = 0;
 
 var welcome = {
 	type: "html-keyboard-response",
-	stimulus: "<div class='center-content'>Welcome to the experiment. Press any key to begin.",
+	stimulus: "<div class='center-content'>Welcome to the experiment. Press any key to begin."
 };
 
 var get_id = {
@@ -363,6 +363,68 @@ var demo = {
 	}
 };
 
+// DEMOGRAPHICS    
+      
+    var gen = {
+        type: 'html-button-response',
+        stimulus: 'Gender:<br>',
+        choices: ['Male', 'Female','Other', 'Prefer not to say'],
+        on_finish: function(data){
+            data.trial = 'gen'
+        }
+    };
+
+    var age = {
+          type: 'survey-text',
+          questions: [
+            {prompt: "Age:"}
+          ],
+        on_finish: function(data){
+            data.trial = 'age'
+        }
+    }; 
+
+      
+    var race = {
+        type: 'html-button-response',
+        stimulus: 'Which category below most accurately describes you:<br>',
+        choices: ['White', 'Hispanic, Latinx, or Spanish origin', 'Black or African American', 'Asian', 'American Indian or Alaska Native', 'Middle Eastern or North African', 'Native Hawaiian or Other Pacific Islander', 'Other', 'Prefer not to say'],
+        on_finish: function(data){
+            data.trial = 'race'
+        }
+    };
+
+      
+      
+    var nativeEng = {
+        type: 'html-button-response',
+        stimulus: 'Is English your first language?<br>',
+        choices: ['Yes', 'No'],
+        on_finish: function(data){
+            data.trial = 'nativeEng'
+        }
+    };
+
+      
+    var edu = {
+        type: 'html-button-response',
+        stimulus: 'What is the highest level of education that you have completed?<br>',
+        choices: ["Some high school","High school", "Some college", "2 year degree", "4 year degree", "Postgraduate/Professional degree/other", "Prefer not to say"],
+        on_finish: function(data){
+            data.trial = 'edu'
+        }
+    };
+
+      
+    var income = {
+        type: 'html-button-response',
+        stimulus: 'What was the total amount of income you earned during the last year?<br>',
+        choices: ['Under $5,000', '$5,000 - $10,000', '$10,000 - $15,000', '$15,000 - $25,000', '$25,000 - $35,000', '$35,000 - $50,000', '$50,000 - $65,000', '$65,000 - $80,000', '$80,000 - $100,000', 'Over $100,000'],
+        on_finish: function(data){
+            data.trial = 'income'
+        }
+    };
+
 var debrief = {
 	type: 'instructions',
 	pages: ["Thank you for your participation. In this study, our goal was to measure introspective accuracy. <br></br> To do this, we have a series of decision models we are using that can objectively pull the weight of how much you valued each feature in your decisions between the hotels. We utilized multiattribute decisions (hotels) to gather those weights, then asked you how much you beleived you weighed them to see if what you self-reported lined up with what our models predict based on your decisions. <br></br> We hypothesized that people would not be very accurate in their introspective assessments, and from this data, we aim to build interventions that can assist in helping people understand their decisions in broader societal contexts. <br></br>"],
@@ -406,6 +468,16 @@ for (var i = 0; i < 8; i++) {
 timeline.push(strategy)
 timeline.push(comments)
 timeline.push(demo)
+    
+/// DEMOS///
+timeline.push(gen);
+timeline.push(age);
+timeline.push(race); 
+timeline.push(nativeEng); 
+timeline.push(edu); 
+timeline.push(income); 
+//////////////
+    
 timeline.push(debrief)
 //timeline.push(end);
 
