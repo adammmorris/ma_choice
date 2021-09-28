@@ -70,7 +70,7 @@ jsPsych.plugins['html-slider-response'] = (function() {
       require_movement: {
         type: jsPsych.plugins.parameterType.BOOL,
         pretty_name: 'Require movement',
-        default: false,
+        default: true,
         description: 'If true, the participant will have to move the slider before continuing.'
       },
       prompt: {
@@ -103,7 +103,7 @@ jsPsych.plugins['html-slider-response'] = (function() {
   plugin.trial = function(display_element, trial) {
 
     // half of the thumb width value from jspsych.css, used to adjust the label positions
-    var half_thumb_width = 7.5; 
+    var half_thumb_width = 7.5;
 
     var html = '<div id="jspsych-html-slider-response-wrapper" style="margin: 100px 0px;">';
     html += '<div id="jspsych-html-slider-response-stimulus">' + trial.stimulus + '</div>';
@@ -122,7 +122,7 @@ jsPsych.plugins['html-slider-response'] = (function() {
       var percent_dist_from_center = ((percent_of_range-50)/50)*100;
       var offset = (percent_dist_from_center * half_thumb_width)/100;
       html += '<div style="border: 1px solid transparent; display: inline-block; position: absolute; '+
-      'left:calc('+percent_of_range+'% - ('+label_width_perc+'% / 2) - '+offset+'px); text-align: center; width: '+label_width_perc+'%;">';  
+      'left:calc('+percent_of_range+'% - ('+label_width_perc+'% / 2) - '+offset+'px); text-align: center; width: '+label_width_perc+'%;">';
       html += '<span style="text-align: center; font-size: 80%;">'+trial.labels[j]+'</span>';
       html += '</div>'
     }
@@ -135,7 +135,7 @@ jsPsych.plugins['html-slider-response'] = (function() {
     }
 
     // add submit button
-    html += '<button id="jspsych-html-slider-response-next" class="jspsych-btn" '+ (trial.require_movement ? "disabled" : "") + '>'+trial.button_label+'</button>';
+    html += '<br><br><button id="jspsych-html-slider-response-next" class="jspsych-btn" '+ (trial.require_movement ? "disabled" : "") + '>'+trial.button_label+'</button>';
 
     display_element.innerHTML = html;
 

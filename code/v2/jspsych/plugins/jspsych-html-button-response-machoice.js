@@ -8,12 +8,12 @@
  *
  **/
 
-jsPsych.plugins["html-button-response"] = (function() {
+jsPsych.plugins["html-button-response-machoice"] = (function() {
 
   var plugin = {};
 
   plugin.info = {
-    name: 'html-button-response',
+    name: 'html-button-response-machoice',
     description: '',
     parameters: {
       stimulus: {
