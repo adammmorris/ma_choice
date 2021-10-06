@@ -11,6 +11,7 @@
     <script src="jspsych/plugins/jspsych-html-button-response.js"></script>
     <script src="jspsych/plugins/jspsych-html-slider-response.js"></script>
     <script src='jspsych/plugins/jspsych-multiple-slider.js'></script>
+    <script src='jspsych/plugins/jspsych-survey-likert.js'></script>
     <script src='jspsych/plugins/jspsych-instructions.js'></script>
     <script src='jspsych/plugins/jspsych-survey-text.js'></script>
     <script src='jspsych/plugins/jspsych-external-html.js'></script>
@@ -73,7 +74,7 @@ var reputation = ['Very bad', 'Bad', 'Moderate', 'Good', 'Very Good'];
 
 var num_of_attributes = 7;
 var num_practice_trials = 10;
-var num_trials = 100;
+var num_trials = 75;
 var trial_wait_time = 7000;
 
 if (debug) {
@@ -197,8 +198,8 @@ var welcome = {
 
 var get_id = {
 	type: 'survey-text',
-	questions: [{prompt: "<b>Worker ID:</b>", name: "worker_id"}],
-	preamble: ["Please enter your <b>Amazon Mechanical Turk Worker ID</b> below.<br>(When you're done, press <b>'Continue'</b>; don't hit Enter.)<br><br>If you do not enter your ID accurately, we will not be able to pay you."],
+	questions: [{prompt: "<b>Prolific ID:</b>", name: "worker_id"}],
+	preamble: ["Please enter your <b>Prolific ID</b> below.<br>(When you're done, press <b>'Continue'</b>)<br><br>If you do not enter your ID accurately, we will not be able to pay you."],
 };
 
 var get_id_loop = {
@@ -216,30 +217,30 @@ var get_id_loop = {
 
 			return false;
 		} else {
-			alert("Please provide your Amazon Mechanical Turk Worker ID.");
+			alert("Please provide your Prolific ID.");
 			return true;
 		}
 	}
 }
 
-var check_consent = function(elem) {
-	if ($('#consent_checkbox').is(':checked')) {
-		return true;
-	}
-	else {
-		alert("If you wish to participate, you must check the box next to the statement 'I agree to participate in this study.'");
-		return false;
-	}
-	return false;
-};
-
-var consent_block = {
-	type:'external-html',
-	url: "consent.php?time=" + study_time + "&money=" + study_money + "&test=1",
-	cont_btn: "start",
-	check_fn: check_consent,
-	force_refresh: true
-};
+//var check_consent = function(elem) {
+//	if ($('#consent_checkbox').is(':checked')) {
+//		return true;
+//	}
+//	else {
+//		alert("If you wish to participate, you must check the box next to the statement 'I agree to participate in this study.'");
+//		return false;
+//	}
+//	return false;
+//};
+//
+//var consent_block = {
+//	type:'external-html',
+//	url: "consent.php?time=" + study_time + "&money=" + study_money + "&test=1",
+//	cont_btn: "start",
+//	check_fn: check_consent,
+//	force_refresh: true
+//};
 
 // first attention check
 var attnCheck1 = {
@@ -365,13 +366,13 @@ var strategy = {
 	type: 'survey-text',
 	questions: [
 	{prompt: "Great job. In this last section, we have a series of further questions for you about yourself and how you made choices in the experiment.<br><br>\
-	Please describe, in your own words, how you made your choices in Part 1 of this study.", name: 'strategy', rows: 15, columns: 120},
+	Please describe, in your own words, how you made your choices in Part 1 of this study.", name: 'strategy', rows: 15, columns: 100},
 	],
 };
 
 var consistency = {
     type: 'html-slider-response',
-    stimulus: '<p>How consistent were you with your decision strategy in the experiment? In other words, how much did the way you made your choices stay the same from trial to trial?</p>',
+    stimulus: '<p>How consistent were you with your decision strategy in the experiment? <br>In other words, how much did the way you made your choices stay the same from trial to trial?</p>',
     labels: ['0 <br></br> Very Inconsistent', '1', '2 <br></br> Quite Inconsistent', '3', '4 <br></br> Neither consistent nor inconsistent', '5', '6 <br></br> Quite Consistent', '7', '8<br></br>Very Consistent'],
 };
 
@@ -382,11 +383,11 @@ var attention = {
 };
 
 var scale_1 = [
-  "Never",
-  "Rarely",
-  "Sometimes",
-  "Often",
-  "Always"
+  "Strongly Disagree",
+  "",
+  "",
+  "",
+  "Strongly Agree"
 ];
 
 var decision_instructions= ['Please indicate to what extent the statements below match your style of making decisions.']
@@ -396,52 +397,21 @@ var dec_slider = {
 	show_clickable_nav: true
 };
 
+// http://www.sjdm.org/dmidi/Decision_Styles_Scale.html
+    
 var likert_page = {
-  type: 'multiple-slider',
+    type: 'multiple-slider',
   questions: [
-    {prompt: "I make decisions on the spur of the moment.", labels: scale_1},
-    {prompt: "I like to consider all the alternatives.", labels: scale_1},
-    {prompt: "I put off making many decisions because thinking about them makes me uneasy.", labels: scale_1},
-    {prompt: "I feel inferior to most people in making decisions.", labels: scale_1},
-    {prompt: "I use the advice of other people in making my important decisions.", labels: scale_1},
-    {prompt: "I feel confident about my ability to make decisions.", labels: scale_1},
-    {prompt: "When making decisions I like to collect lots of information.", labels: scale_1},
-    {prompt: "I don't trust my ability to make important decisions.", labels: scale_1},
-    {prompt: "When making a decision, I am afraid that I might be wrong.", labels: scale_1},
-    {prompt: "My friends or family seek my advice when they have to make important decisions.", labels: scale_1},
-    {prompt: "When making decisions, I do what seems natural at the moment.", labels: scale_1},
-    {prompt: "I postpone decision-making whenever possible.", labels: scale_1},
-    {prompt: "My decision making requires careful thought.", labels: scale_1},
-    {prompt: "I need the assistance of other people when making important decisions.", labels: scale_1},
-    {prompt: "I don't make decisions unless I really have to.", labels: scale_1},
-    {prompt: "I have faith in my decisions.", labels: scale_1},
-    {prompt: "When making a decision, I consider various options in terms of specific goals.", labels: scale_1},
-    {prompt: "If I make a choice and it turns out well, I still feel like something of a failure if I find out that another choice would have turned out even better.", labels: scale_1},
-    {prompt: "I weigh the pros and cons of each option before I make a decision.", labels: scale_1},
-    {prompt: "I do not seek advice from others when I make decisions.", labels: scale_1},
-    {prompt: "I procrastinate when it comes to making important decisions.", labels: scale_1},
-    {prompt: "I worry that making a decision will close out other options, so I postpone the decision.", labels: scale_1},
-    {prompt: "When I need to make a decision, I consult family or friends.", labels: scale_1},
-    {prompt: "I feel very anxious when I need to make a decision.", labels: scale_1},
-    {prompt: "I make decisions quickly.", labels: scale_1},
-    {prompt: "I panic when I think that my decision might be wrong.", labels: scale_1},
-    {prompt: "I think I am a good decision maker.", labels: scale_1},
-    {prompt: "My decisions are spontaneous.", labels: scale_1},
-    {prompt: "If I have the support of others it is easier for me to make important decisions.", labels: scale_1},
-    {prompt: "The possibility that some small thing might go wrong causes me to change my mind abruptly.", labels: scale_1},
-    {prompt: "Whenever I make a choice, I try to get information about how the other alternatives turned out.", labels: scale_1},
-    {prompt: "I make impulsive decisions.", labels: scale_1},
-    {prompt: "I think about all the bad decisions I have made in my life.", labels: scale_1},
-    {prompt: "I feel as if I'm under tremendous time pressure when making decisions.", labels: scale_1},
-    {prompt: "When making decisions, I rely upon my instincts.", labels: scale_1},
-    {prompt: "When I make a decision, it is more important for me to feel the decision is right than to have a rational reason for it.", labels: scale_1},
-    {prompt: "I try to be clear about my objectives before choosing.", labels: scale_1},
-    {prompt: "Others seek my help in making their decisions.", labels: scale_1},
-    {prompt: "When I make decisions, my top priority is to not get 'burned", labels: scale_1},
-    {prompt: "When I make a decision, I trust my inner feelings and reactions. ", labels: scale_1},
-    {prompt: "I like to have someone to steer me in the right direction when I'm faced with important decisions.", labels: scale_1},
-    {prompt: "I can't think straight if I have to make decisions in a hurry.", labels: scale_1},
-    {prompt: "When I make decisions, I tend to rely on my intuition.", labels: scale_1},
+    {prompt: "I prefer to gather all the necessary information before committing to a decision.", labels: scale_1},
+    {prompt: "I thoroughly evaluate decision alternatives before making a final choice.", labels: scale_1},
+    {prompt: "In decision making, I take time to contemplate the pros/cons or risks/benefits of a situation.", labels: scale_1},
+    {prompt: "Investigating the facts is an important part of my decision making process.", labels: scale_1},
+    {prompt: "I weigh a number of different factors when making decisions.", labels: scale_1},
+    {prompt: "When making decisions, I rely mainly on my gut feelings.", labels: scale_1},
+    {prompt: "My initial hunch about decisions is generally what I follow.", labels: scale_1},
+    {prompt: "I make decisions based on intuition.", labels: scale_1},
+    {prompt: "I rely on my first impressions when making decisions.", labels: scale_1},
+    {prompt: "I weigh feelings more than analysis in making decisions.", labels: scale_1},
   ]
 };
 
@@ -453,7 +423,8 @@ var choice_domain = {
 };
 
 //***Five Facet Mindfulness Questionnaire***
-
+// https://www.sussexpartnership.nhs.uk/sites/default/files/documents/jenny_gus_short_ffmq-15_june_16.pdf
+    
 var mindfulness_instructions_text = ["Next, we'll ask you some questions about your day-to-day experiences."]
 var mindfulness_instructions = {
 	type: 'instructions',
@@ -466,46 +437,20 @@ var mindfulness_options = ['Almost Never','Rarely True', 'Sometimes True','Often
 var mindfulness = {
   type: 'multiple-slider',
   questions: [
-    {prompt: "When I'm walking, I deliberately notice the sensations of my body moving.", labels: mindfulness_options},
-    {prompt: "I'm good at finding words to describe my feelings.", labels: mindfulness_options},
-    {prompt: "I criticize myself for having irrational or inappropriate emotions.", labels: mindfulness_options},
-    {prompt: "I perceive my feelings and emotions without having to react to them.", labels: mindfulness_options},
-    {prompt: "When I do things, my mind wanders off and I'm easily distracted.", labels: mindfulness_options},
-    {prompt: "When I take a shower or bath, I stay alert to the sensations of water on my body.", labels: mindfulness_options},
-    {prompt: "I can easily put my beliefs, opinions, and expectations into words",labels: mindfulness_options},
+    {prompt: "When I take a shower or a bath, I stay alert to the sensations of water on my body.", labels: mindfulness_options},
+    {prompt: "I’m good at finding words to describe my feelings.", labels: mindfulness_options},
     {prompt: "I don't pay attention to what I'm doing because I'm daydreaming, worrying, or otherwise distracted.", labels: mindfulness_options},
-    {prompt: "I watch my feelings without getting lost in them.", labels: mindfulness_options},
-    {prompt: "I tell myself I shouldn't be feeling the way I'm feeling.", labels: mindfulness_options},
-    {prompt: "I notice how foods and drinks affect my thoughts, bodily sensations, and emotions. ", labels: mindfulness_options},
-    {prompt: "It's hard for me to find the words to describe what I'm thinking.", labels: mindfulness_options},
-    {prompt: "I am easily distracted.", labels: mindfulness_options},
     {prompt: "I believe some of my thoughts are abnormal or bad and I shouldn't think that way.", labels: mindfulness_options},
-    {prompt: "I pay attention to sensations, such as the wind in my hair or sun on my face.", labels: mindfulness_options},
-    {prompt: "I have trouble thinking of the right words to express how I feel about things", labels: mindfulness_options},
-    {prompt: "I make judgments about whether my thoughts are good or bad.", labels: mindfulness_options},
-    {prompt: "I find it difficult to stay focused on what's happening in the present. (", labels: mindfulness_options},
     {prompt: "When I have distressing thoughts or images, I “step back” and am aware of the thought or image without getting taken over by it.", labels: mindfulness_options},
-    {prompt: "I pay attention to sounds, such as clocks ticking, birds chirping, or cars passing. ", labels: mindfulness_options},
-    {prompt: "In difficult situations, I can pause without immediately reacting.", labels: mindfulness_options},
-    {prompt: "When I have a sensation in my body, it's difficult for me to describe it because I can't find the right words.", labels: mindfulness_options},
-    {prompt: "It seems I am “running on automatic” without much awareness of what I'm doing.", labels: mindfulness_options},
-    {prompt: "When I have distressing thoughts or images, I feel calm soon after.", labels: mindfulness_options},
-    {prompt: "I tell myself that I shouldn't be thinking the way I'm thinking", labels: mindfulness_options},
-    {prompt: "I notice the smells and aromas of things.", labels: mindfulness_options},
-    {prompt: "Even when I'm feeling terribly upset, I can find a way to put it into words. ", labels: mindfulness_options},
-    {prompt: "I rush through activities without being really attentive to them.", labels: mindfulness_options},
-    {prompt: "When I have distressing thoughts or images, I am able just to notice them without reacting", labels: mindfulness_options},
-    {prompt: "I think some of my emotions are bad or inappropriate and I shouldn't feel them. (", labels: mindfulness_options},
-    {prompt: "I notice visual elements in art or nature, such as colors, shapes, textures, or patterns of light and shadow.", labels: mindfulness_options},
-    {prompt: "My natural tendency is to put my experiences into words.", labels: mindfulness_options},
-    {prompt: "When I have distressing thoughts or images, I just notice them and let them go.", labels: mindfulness_options},
-    {prompt: "I do jobs or tasks automatically without being aware of what I'm doing.", labels: mindfulness_options},
-    {prompt: "When I have distressing thoughts or images, I judge myself as good or bad depending what the thought or image is about. ", labels: mindfulness_options},
-    {prompt: "I pay attention to how my emotions affect my thoughts and behavior.", labels: mindfulness_options},
-    {prompt: "I can usually describe how I feel at the moment in considerable detail.", labels: mindfulness_options},
-    {prompt: "I find myself doing things without paying attention.", labels: mindfulness_options},
-    {prompt: "I disapprove of myself when I have irrational ideas. ", labels: mindfulness_options}
-
+    {prompt: "I notice how foods and drinks affect my thoughts, bodily sensations, and emotions.", labels: mindfulness_options},
+    {prompt: "I have trouble thinking of the right words to express how I feel about things.",labels: mindfulness_options},
+    {prompt: "I do jobs or tasks automatically without being aware of what I’m doing.", labels: mindfulness_options},
+    {prompt: "I think some of my emotions are bad or inappropriate and I shouldn’t feel them. ", labels: mindfulness_options},
+    {prompt: "When I have distressing thoughts or images I am able just to notice them without reacting.", labels: mindfulness_options},
+    {prompt: "I pay attention to sensations, such as the wind in my hair or sun on my face.", labels: mindfulness_options},
+    {prompt: "Even when I’m feeling terribly upset I can find a way to put it into words.", labels: mindfulness_options},
+    {prompt: "I tell myself I shouldn’t be feeling the way I’m feeling.", labels: mindfulness_options},
+    {prompt: "When I have distressing thoughts or images I just notice them and let them go.", labels: mindfulness_options}
   ],
 };
 
@@ -536,6 +481,32 @@ var selfknowledge = {
 	{prompt:'Spending time to know and understand my thoughts and feelings has never helped me to know myself better',labels:selfknowledge_options},
 	{prompt:'Anytime I try to analyze my contributions to a problem, I get confused',labels:selfknowledge_options}],
 };
+    
+    
+var choice_exp = {
+        type: 'html-slider-response',
+        min: 1,
+        max: 5,
+        start: 3,
+        step: 1,
+        stimulus: "<p>Have you participated in similar studies in which<br> you had to choose between two options with various attributes?</p>",
+        labels: ["1<br> <font size='-2'>Never</font>","2<br> <font size='-2'>A few</font>","3<br> <font size='-2'>More than a few</font>","4<br> <font size='-2'>Many</font>","5 <br><font size='-2'>Countless</font>"],
+        slider_width: 400,
+        prompt: "",
+        on_finish: function(data){
+            data.trial = 'DG_exp'
+        }
+    };
+
+var mtvScale = {
+          type: 'survey-text',
+          questions: [
+            {prompt: "We asked you to report how much you weighted <br> one factor over another during your choices. We would <br>appreciate any feedback on your experience responding to this question.<br><br> Please use this space to share any thoughts about this.",rows: 10, columns: 100}
+          ],
+        on_finish: function(data){
+            data.trial = 'mtvScale'
+        }
+        };
 
 
 var gen = {
@@ -547,13 +518,13 @@ var gen = {
 	}
 };
 
-var age = {
+var age_years = {
 		type: 'survey-text',
 		questions: [
 			{prompt: "Age:"}
 		],
 	on_finish: function(data){
-			data.trial = 'age'
+			data.trial = 'age_years'
 	}
 };
 
@@ -600,7 +571,7 @@ var income = {
 
 var debrief = {
 type: 'instructions',
-pages: ["Thank you for your participation. In this study, our goal was to measure introspective accuracy. <br></br> To do this, we have a series of decision models we are using that can objectively pull the weight of how much you valued each feature in your decisions between the hotels. We utilized multiattribute decisions (hotels) to gather those weights, then asked you how much you beleived you weighed them to see if what you self-reported lined up with what our models predict based on your decisions. <br></br> We hypothesized that people would not be very accurate in their introspective assessments, and from this data, we aim to build interventions that can assist in helping people understand their decisions in broader societal contexts. <br></br>"],
+pages: ["Thank you for your participation. In this study, our goal was to measure introspective accuracy. <br></br> To do this, we have a series of decision models we are using that can objectively pull the weight of how much you valued each feature in your decisions between the hotels. We utilized multiattribute decisions (houses) to gather those weights, then asked you how much you beleived you weighed them to see if what you self-reported lined up with what our models predict based on your decisions. <br></br> We hypothesized that people would not be very accurate in their introspective assessments, and from this data, we aim to build interventions that can assist in helping people understand their decisions in broader societal contexts. <br></br>"],
 show_clickable_nav: true
 };
 
@@ -614,20 +585,21 @@ return false;
 return false;
 };
 
-var end = {
-type: 'external-html',
-url: "end.php?turkcode=" + turk_code + "&test=1",
-cont_btn: "end",
-check_fn: check_end,
-force_refresh: true
-};
+//var end = {
+//type: 'external-html',
+//url: "end.php?turkcode=" + turk_code + "&test=1",
+//cont_btn: "end",
+//check_fn: check_end,
+//force_refresh: true
+//};
+
 
 var timeline = []
 
 timeline.push(welcome);
 timeline.push(get_id_loop);
 if (!debug) {
-	timeline.push(consent_block);
+//	timeline.push(consent_block);
 	timeline.push(attnCheck1);
 }
 timeline.push(instructions);
@@ -654,17 +626,22 @@ timeline.push(mindfulness_instructions);
 timeline.push(mindfulness);
 timeline.push(selfknowledge_instructions);
 timeline.push(selfknowledge);
+timeline.push(choice_exp);
+timeline.push(mtvScale);
 timeline.push(gen);
-timeline.push(age);
+timeline.push(age_years);
 timeline.push(race);
 timeline.push(nativeEng);
 timeline.push(edu);
 timeline.push(income);
 timeline.push(debrief)
-timeline.push(end);
+//timeline.push(end);
 jsPsych.init({
 	timeline: timeline,
-});
+   on_finish: function() {
+    document.body.innerHTML = '<p><p><p align="center">Thank you for participating in the study!<p align="center"><b>You will be automatically re-directed to Prolific in a few moments.</b></p>';
+    setTimeout(function () { location.href = "https://app.prolific.co/submissions/complete?cc=3F3EE65E" }, 5000)
+}});
 
 </script>
 </html>

@@ -12,7 +12,7 @@ You are invited to take part in a research study designed to look at how people 
 	<p>
 <b>Procedures:</b>
 
-If you agree to participate, you will be asked to make judgments or decisions about positive and negative outcomes for yourself and for other people. Afterwards, you will be asked questions related to your reactions to the events, as well as some personality traits and background variables that may affect information processing in these tasks. You may withdraw from this study at any point by closing out of the browser window. Depending on the study, your participation will last between approximately 8 minutes to an hour. You will be paid $7.50 an hour for your participation in this study. Although this study will not benefit you personally, we hope that our results will add to the knowledge about how people make decisions about positive and negative outcomes for themselves and for other people.
+If you agree to participate, you will be asked to make judgments or decisions about positive and negative outcomes for yourself and for other people. Afterwards, you will be asked questions related to your reactions to the events, as well as some personality traits and background variables that may affect information processing in these tasks. You may withdraw from this study at any point by closing out of the browser window. Depending on the study, your participation will last between approximately 20 minutes. You will be paid $7.50 an hour for your participation in this study. Although this study will not benefit you personally, we hope that our results will add to the knowledge about how people make decisions about positive and negative outcomes for themselves and for other people.
 	</p>
 	<p>
 <b>Risks and Benefits:</b>
