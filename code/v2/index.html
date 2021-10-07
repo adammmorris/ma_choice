@@ -69,8 +69,8 @@ var prox1 = ['5 min', '10 min', '20 min'];
 var prox2 = ['10 min', '30 min', '60 min', '90 minutes', '120 minutes'];
 var light = ['No natural light', 'A little natural light', 'Moderate natural light', 'A lot of natural light'];
 var age = ['New', 'Medium', 'Old'];
-var climate = ['Very Hot', 'Hot', 'Moderate', 'Cold', 'Very Cold'];
-var reputation = ['Very bad', 'Bad', 'Moderate', 'Good', 'Very Good'];
+var climate = ['Very Bad', 'Bad', 'Moderate', 'Good', 'Very Good'];
+var reputation = ['Very Bad', 'Bad', 'Moderate', 'Good', 'Very Good'];
 
 var num_of_attributes = 7;
 var num_practice_trials = 10;
@@ -83,8 +83,8 @@ if (debug) {
 	trial_wait_time = 1000;
 }
 
-function generateTable(){
-	var cur_attributes = jsPsych.randomization.sampleWithoutReplacement(home_attributes,num_of_attributes);
+function generateAttributeValues(cur_attributes){
+
 	//for (let j=0;j<cur_attributes.length;j++)
 	//console.log(cur_attributes[j]);
 	var arr = [];
@@ -172,19 +172,22 @@ function generateTable(){
 //console.log(cur_attributes);
 //console.log(arr[0][1]);
 	}
-console.log(arr);
-
-let tbl_html = "<div align='center'><table border = 2px solid black><thead>\
-</tr><tr><th></th><td><b>Home A</b></td><td><b>Home B</b></td>";
-
-for (var i = 0; i < cur_attributes.length; i++) {
-	tbl_html += "<tr><th>"+arr[i][0]+"</th><td>"+arr[i][1]+"</td><td>"+arr[i][2]+"</td>";
+//console.log(arr);
+return arr;
 }
 
-tbl_html += '</tr></table><br>';
+function generateTable(arr) {
+	let tbl_html = "<div align='center'><table border = 2px solid black><thead>\
+	</tr><tr><th></th><td><b>Home A</b></td><td><b>Home B</b></td>";
 
-//return "<div align='center'><table border = 2px solid black><thead></tr><tr><th></th><td><b>Home A</b></td><td><b>Home B</b></td><tr><th>"+arr[0][0]+"</th><td>"+arr[0][1]+"</td><td>"+arr[0][2]+"</td><tr><th>"+arr[1][0]+"</th><td>"+arr[1][1]+"</td><td>"+arr[1][2]+"</td></tr><tr><th>"+arr[2][0]+"</th><td>"+arr[2][1]+"</td><td>"+arr[2][2]+"</td></tr><tr><th>"+arr[3][0]+"</th><td>"+arr[3][1]+"</td><td>"+arr[3][2]+"</td></tr><tr><th>"+arr[4][0]+"</th><td>"+arr[4][1]+"</td><td>"+arr[4][2]+"</td></tr></table>"
-return tbl_html;
+	for (var i = 0; i < arr.length; i++) {
+		tbl_html += "<tr><th>"+arr[i][0]+"</th><td>"+arr[i][1]+"</td><td>"+arr[i][2]+"</td>";
+	}
+
+	tbl_html += '</tr></table><br>';
+
+	//return "<div align='center'><table border = 2px solid black><thead></tr><tr><th></th><td><b>Home A</b></td><td><b>Home B</b></td><tr><th>"+arr[0][0]+"</th><td>"+arr[0][1]+"</td><td>"+arr[0][2]+"</td><tr><th>"+arr[1][0]+"</th><td>"+arr[1][1]+"</td><td>"+arr[1][2]+"</td></tr><tr><th>"+arr[2][0]+"</th><td>"+arr[2][1]+"</td><td>"+arr[2][2]+"</td></tr><tr><th>"+arr[3][0]+"</th><td>"+arr[3][1]+"</td><td>"+arr[3][2]+"</td></tr><tr><th>"+arr[4][0]+"</th><td>"+arr[4][1]+"</td><td>"+arr[4][2]+"</td></tr></table>"
+	return tbl_html;
 }
 
 var start_instructions = 0;
@@ -295,13 +298,44 @@ var instructions2 = {
 
 var practice_trials = [];
 for (var i = 0; i < num_practice_trials; i++) {
+	var cur_attributes = jsPsych.randomization.sampleWithoutReplacement(home_attributes,num_of_attributes);
+	var attribute_values = generateAttributeValues(cur_attributes);
+	var tbl = generateTable(attribute_values);
+
 	practice_trials.push({
 		 type: 'html-button-response-machoice',
-		 stimulus: generateTable,
+		 stimulus: tbl,
 		 choices: ['Home A','Home B'],
 		 prompt: 'Which would you choose?<br><small>(Trial ' + (i+1) + ' out of ' + num_practice_trials + ')</small>',
-		 button_duration: trial_wait_time //how long to hide buttons,
-	});
+		 button_duration: trial_wait_time, //how long to hide buttons
+ 		 data: {which_trial: i, atts: cur_attributes, att_values: attribute_values},
+		 on_finish: function(data) {
+			 atts_opt1 = [];
+			 atts_opt2 = [];
+
+			 for (var i = 0; i < data.att_values.length; i++) {
+				 atts_opt1.push(data.att_values[i][1]);
+				 atts_opt2.push(data.att_values[i][2]);
+			 }
+
+			 s1_data = {
+				 subject: data.subject,
+				 version: data.version,
+				 assignmentId: data.assignmentId,
+				 trial: data.which_trial,
+				 practice: 1,
+				 opt1_id: -1,
+				 opt2_id: -1,
+				 attributes: data.atts,
+				 opt1_values: atts_opt1,
+				 opt2_values: atts_opt2,
+				 choice: data.choice,
+				 rt: data.rt
+			 }
+
+			 save_data(s1_data, 's1');
+		 }
+	 });
 }
 
 var trials = [];
@@ -359,6 +393,18 @@ for (var i = 0; i < 19; i++) {
 	 	prompt: prompt,
 	 	data: {which_trial: i},
 	 	require_movement: true,
+		on_finish: function(data) {
+	 		s2_data = {
+				subject: data.subject,
+				version: data.version,
+				assignmentId: data.assignmentId,
+				trial: data.which_trial,
+	 			attribute: attribute_rating_questions[data.which_trial],
+	 			rating: data.response,
+	 			rt: data.rt
+	 		}
+	 	save_data(s2_data, 's2');
+		}
 	};
 };
 
@@ -368,18 +414,27 @@ var strategy = {
 	{prompt: "Great job. In this last section, we have a series of further questions for you about yourself and how you made choices in the experiment.<br><br>\
 	Please describe, in your own words, how you made your choices in Part 1 of this study.", name: 'strategy', rows: 15, columns: 100},
 	],
+	on_finish: function(data) {
+		jsPsych.data.addProperties({strategy: data.response.strategy});
+	}
 };
 
 var consistency = {
     type: 'html-slider-response',
     stimulus: '<p>How consistent were you with your decision strategy in the experiment? <br>In other words, how much did the way you made your choices stay the same from trial to trial?</p>',
     labels: ['0 <br></br> Very Inconsistent', '1', '2 <br></br> Quite Inconsistent', '3', '4 <br></br> Neither consistent nor inconsistent', '5', '6 <br></br> Quite Consistent', '7', '8<br></br>Very Consistent'],
+		on_finish: function(data) {
+			jsPsych.data.addProperties({consistency: data.response});
+		}
 };
 
 var attention = {
 	type: 'html-slider-response',
     stimulus: "<p>How attentive were you throughout the experiment? (Please be honest; we won't punish you for being inattentive.)</p>",
-    labels: ['0 <br></br> Very Inattentive', '1', '2 <br></br> Quite Inattentive', '3', '4 <br></br> Neither attentive nor inattentive', '5', '6 <br></br> Quite Attentive', '7', '8<br></br>Very Attentive']
+    labels: ['0 <br></br> Very Inattentive', '1', '2 <br></br> Quite Inattentive', '3', '4 <br></br> Neither attentive nor inattentive', '5', '6 <br></br> Quite Attentive', '7', '8<br></br>Very Attentive'],
+		on_finish: function(data) {
+			jsPsych.data.addProperties({attention: data.response});
+		}
 };
 
 var scale_1 = [
@@ -398,7 +453,8 @@ var dec_slider = {
 };
 
 // http://www.sjdm.org/dmidi/Decision_Styles_Scale.html
-    
+
+var decisionstyle_responses = null;
 var likert_page = {
     type: 'multiple-slider',
   questions: [
@@ -412,19 +468,25 @@ var likert_page = {
     {prompt: "I make decisions based on intuition.", labels: scale_1},
     {prompt: "I rely on my first impressions when making decisions.", labels: scale_1},
     {prompt: "I weigh feelings more than analysis in making decisions.", labels: scale_1},
-  ]
+  ],
+	on_finish: function(data) {
+		decisionstyle_responses = JSON.parse(data.responses);
+	}
 };
 
 
 var choice_domain = {
 	type: 'html-slider-response',
     stimulus: "In your normal life, how much time have you spent thinking about which houses or apartments to rent?",
-    labels: ['0 <br></br> Very little time', '1 <br><br> Some time', '2 <br></br> A lot of time', '3 <br><br> Tons of time']
+    labels: ['0 <br></br> Very little time', '1 <br><br> Some time', '2 <br></br> A lot of time', '3 <br><br> Tons of time'],
+		on_finish: function(data) {
+			jsPsych.data.addProperties({choice_domain: data.response});
+		}
 };
 
 //***Five Facet Mindfulness Questionnaire***
 // https://www.sussexpartnership.nhs.uk/sites/default/files/documents/jenny_gus_short_ffmq-15_june_16.pdf
-    
+
 var mindfulness_instructions_text = ["Next, we'll ask you some questions about your day-to-day experiences."]
 var mindfulness_instructions = {
 	type: 'instructions',
@@ -434,6 +496,7 @@ var mindfulness_instructions = {
 
 var mindfulness_options = ['Almost Never','Rarely True', 'Sometimes True','Often True', 'Always True'];
 
+var mindfulness_responses = null;
 var mindfulness = {
   type: 'multiple-slider',
   questions: [
@@ -452,6 +515,9 @@ var mindfulness = {
     {prompt: "I tell myself I shouldn’t be feeling the way I’m feeling.", labels: mindfulness_options},
     {prompt: "When I have distressing thoughts or images I just notice them and let them go.", labels: mindfulness_options}
   ],
+	on_finish: function(data) {
+		mindfulness_responses = JSON.parse(data.responses);
+	}
 };
 
 var selfknowledge_instructions_text = ["You're almost done. On the next page, please rate the extent to which you agree with each statement."]
@@ -463,7 +529,7 @@ var selfknowledge_instructions = {
 }
 
 var selfknowledge_options = ['Strongly Disagree','Disagree', 'Neutral','Agree', 'Strongly Agree'];
-
+var selfknowledge_responses = null;
 
 var selfknowledge = {
 	type: 'multiple-slider',
@@ -480,9 +546,12 @@ var selfknowledge = {
 	{prompt:'In some situations, I almost never can understand why I behaved in particular ways, so I udually do not even try',labels:selfknowledge_options},
 	{prompt:'Spending time to know and understand my thoughts and feelings has never helped me to know myself better',labels:selfknowledge_options},
 	{prompt:'Anytime I try to analyze my contributions to a problem, I get confused',labels:selfknowledge_options}],
+	on_finish: function(data) {
+		selfknowledge_responses = JSON.parse(data.responses);
+	}
 };
-    
-    
+
+
 var choice_exp = {
         type: 'html-slider-response',
         min: 1,
@@ -493,20 +562,20 @@ var choice_exp = {
         labels: ["1<br> <font size='-2'>Never</font>","2<br> <font size='-2'>A few</font>","3<br> <font size='-2'>More than a few</font>","4<br> <font size='-2'>Many</font>","5 <br><font size='-2'>Countless</font>"],
         slider_width: 400,
         prompt: "",
-        on_finish: function(data){
-            data.trial = 'DG_exp'
-        }
+				on_finish: function(data) {
+					jsPsych.data.addProperties({choice_exp: data.response});
+				}
     };
 
 var mtvScale = {
           type: 'survey-text',
           questions: [
-            {prompt: "We asked you to report how much you weighted <br> one factor over another during your choices. We would <br>appreciate any feedback on your experience responding to this question.<br><br> Please use this space to share any thoughts about this.",rows: 10, columns: 100}
+            {prompt: "We asked you to report how much you weighted <br> one factor over another during your choices. How did your answer these questions?<br><br> Please use this space to share any thoughts about this.",rows: 10, columns: 100}
           ],
         on_finish: function(data){
-            data.trial = 'mtvScale'
+					jsPsych.data.addProperties({mtvScale: data.response});
         }
-        };
+  };
 
 
 var gen = {
@@ -514,7 +583,7 @@ var gen = {
 	stimulus: "Finally, we'll ask you to input some demographic information.<br><br>What is your gender?<br>",
 	choices: ['Male', 'Female','Other', 'Prefer not to say'],
 	on_finish: function(data){
-			data.trial = 'gen'
+		jsPsych.data.addProperties({gender: data.response});
 	}
 };
 
@@ -524,7 +593,7 @@ var age_years = {
 			{prompt: "Age:"}
 		],
 	on_finish: function(data){
-			data.trial = 'age_years'
+		jsPsych.data.addProperties({age: data.response});
 	}
 };
 
@@ -534,7 +603,7 @@ var race = {
 	stimulus: 'Which category below most accurately describes you:<br>',
 	choices: ['White', 'Hispanic, Latinx, or Spanish origin', 'Black or African American', 'Asian', 'American Indian or Alaska Native', 'Middle Eastern or North African', 'Native Hawaiian or Other Pacific Islander', 'Other', 'Prefer not to say'],
 	on_finish: function(data){
-			data.trial = 'race'
+		jsPsych.data.addProperties({race: data.response});
 	}
 };
 
@@ -545,7 +614,7 @@ var nativeEng = {
 	stimulus: 'Is English your first language?<br>',
 	choices: ['Yes', 'No'],
 	on_finish: function(data){
-			data.trial = 'nativeEng'
+		jsPsych.data.addProperties({nativeEng: data.response});
 	}
 };
 
@@ -555,7 +624,7 @@ var edu = {
 	stimulus: 'What is the highest level of education that you have completed?<br>',
 	choices: ["Some high school","High school", "Some college", "2 year degree", "4 year degree", "Postgraduate/Professional degree/other", "Prefer not to say"],
 	on_finish: function(data){
-			data.trial = 'edu'
+		jsPsych.data.addProperties({edu: data.response});
 	}
 };
 
@@ -565,7 +634,37 @@ var income = {
 	stimulus: 'What was the total amount of income you earned during the last year?<br>',
 	choices: ['Under $5,000', '$5,000 - $10,000', '$10,000 - $15,000', '$15,000 - $25,000', '$25,000 - $35,000', '$35,000 - $50,000', '$50,000 - $65,000', '$65,000 - $80,000', '$80,000 - $100,000', 'Over $100,000'],
 	on_finish: function(data){
-			data.trial = 'income'
+		jsPsych.data.addProperties({income: data.response});
+
+		/*var decisionstyle_responses_arr = [];
+		for (var i = 0; i < decisionstyle_responses.length; i++) {
+				decisionstyle_responses_arr.push(decisionstyle_responses.)
+		}*/
+
+		demo_data = {
+			subject: data.subject,
+			version: data.version,
+			assignmentId: data.assignmentId,
+			strategy: data.strategy,
+			consistency: data.consistency,
+			attention: data.attention,
+			choice_exp: data.response.choice_exp,
+			choice_domain: data.response.choice_domain,
+			decisionstyle_responses: decisionstyle_responses.values(),
+			mindfulness_responses: mindfulness_responses.values(),
+			selfknowledge_responses: selfknowledge_responses.values(),
+			mtvScale: data.response.mtvScale,
+			gender: data.response.gender,
+			age: data.response.age,
+			race: data.response.race,
+			edu: data.response.edu,
+			income: data.response.income,
+			nativeEng: data.response.nativeEng,
+			attention_check: data.attention_check,
+			total_time: Date.now() - start_instructions
+		}
+
+		save_data(demo_data, 'demo');
 	}
 };
 

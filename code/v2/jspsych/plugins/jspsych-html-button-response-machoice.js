@@ -104,13 +104,15 @@ jsPsych.plugins["html-button-response-machoice"] = (function() {
     //   var str = buttons[i].replace(/%choice%/g, trial.choices[i]);
     //   html += '<div class="jspsych-html-button-response-button" style="display: inline-block; margin:'+trial.margin_vertical+' '+trial.margin_horizontal+'" id="jspsych-html-button-response-button-' + i +'" data-choice="'+i+'">'+str+'</div>';
     // }
-    html += '<div class="jspsych-html-button-response-button" style="display: inline-block; margin:'+trial.margin_vertical+' '+trial.margin_horizontal+'" id="homea" data-choice="Home A"><button class="jspsych-btn" style="visibility:hidden;">Home A</button></div>';
-    html += '<div class="jspsych-html-button-response-button" style="display: inline-block; margin:'+trial.margin_vertical+' '+trial.margin_horizontal+'" id="homeb" data-choice="Home B"><button class="jspsych-btn" style="visibility:hidden;">Home B</button></div>';
+    html += '<div class="jspsych-html-button-response-button" style="display: inline-block; margin:'+trial.margin_vertical+' '+trial.margin_horizontal+'" id="homea" data-choice="Home A"><button class="jspsych-btn" disabled>Home A</button></div>';
+    html += '<div class="jspsych-html-button-response-button" style="display: inline-block; margin:'+trial.margin_vertical+' '+trial.margin_horizontal+'" id="homeb" data-choice="Home B"><button class="jspsych-btn" disabled>Home B</button></div>';
     jsPsych.pluginAPI.setTimeout(function(){
-    document.getElementById('homea').getElementsByTagName('button')[0].style.visibility = "visible";
+    //document.getElementById('homea').getElementsByTagName('button')[0].style.visibility = "visible";
+    document.getElementById('homea').getElementsByTagName('button')[0].disabled = false;
     }, trial.button_duration);
     jsPsych.pluginAPI.setTimeout(function(){
-    document.getElementById('homeb').getElementsByTagName('button')[0].style.visibility = "visible";
+    //document.getElementById('homeb').getElementsByTagName('button')[0].style.visibility = "visible";
+    document.getElementById('homeb').getElementsByTagName('button')[0].disabled = false;
     }, trial.button_duration);
 
     html += '</div>';
