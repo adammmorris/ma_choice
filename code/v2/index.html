@@ -248,7 +248,7 @@ var get_id_loop = {
 // first attention check
 var attnCheck1 = {
     type: 'survey-text',
-    questions: [{prompt: 'Your response', name: 'attention_check'}],
+    questions: [{prompt: 'Your response', name: 'attention_check', required: true}],
     preamble: ["In order to complete this study, you will need to pay close attention for its entire duration. If you do not pay close attention, your data will be unusable.\
 		<b>Please do not take this study unless you have time and energy to pay attention for the full length of time.</b>\
 		<br><br>Please type this exact sentence into the box below: 'I will complete this study with my full attention.' and then continue."],
@@ -412,7 +412,7 @@ var strategy = {
 	type: 'survey-text',
 	questions: [
 	{prompt: "Great job. In this last section, we have a series of further questions for you about yourself and how you made choices in the experiment.<br><br>\
-	Please describe, in your own words, how you made your choices in Part 1 of this study.", name: 'strategy', rows: 15, columns: 100},
+	Please describe, in your own words, how you made your choices in Part 1 of this study.", name: 'strategy', required: true, rows: 15, columns: 100},
 	],
 	on_finish: function(data) {
 		jsPsych.data.addProperties({strategy: data.response.strategy});
@@ -570,7 +570,7 @@ var choice_exp = {
 var mtvScale = {
           type: 'survey-text',
           questions: [
-            {prompt: "We asked you to report how much you weighted <br> one factor over another during your choices. How did your answer these questions?<br><br> Please use this space to share any thoughts about this.",rows: 10, columns: 100}
+            {prompt: "We asked you to report how much you weighted <br> one factor over another during your choices. How did your answer these questions?<br><br> Please use this space to share any thoughts about this.", required: true, rows: 10, columns: 100}
           ],
         on_finish: function(data){
 					jsPsych.data.addProperties({mtvScale: data.response});
@@ -590,7 +590,7 @@ var gen = {
 var age_years = {
 		type: 'survey-text',
 		questions: [
-			{prompt: "Age:"}
+			{prompt: "Age:", required: true}
 		],
 	on_finish: function(data){
 		jsPsych.data.addProperties({age: data.response});
