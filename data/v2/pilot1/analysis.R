@@ -66,6 +66,9 @@ se = function(x) {return(sd(x, na.rm = T) / sqrt(sum(!is.na(x))))}
 as.string.vector = function(x) {
   return(strsplit(x,',')[[1]])
 }
+as.numeric.vector = function(x) {
+  return(as.numeric(strsplit(x,',')[[1]]))
+}
 as.string = function(x) {
   return(paste(x, collapse = ','))
 }
@@ -82,44 +85,135 @@ df.s2.raw = read.csv('s2.csv', stringsAsFactors = F) %>% arrange(subject)
 
 # Do filtering ---------------------------------------------------------
 
-df.demo = df.demo.raw
-df.s1 = df.s1.raw %>% filter(practice == 0) %>% mutate(subject = factor(subject))
-df.s2 = df.s2.raw
+df.demo = df.demo.raw %>% mutate(subject = factor(subject), subject.num = as.numeric(subject))
+df.s1 = df.s1.raw %>% filter(practice == 0) %>% mutate(subject = factor(subject), subject.num = as.numeric(subject))
+df.s2 = df.s2.raw %>% mutate(subject = factor(subject), subject.num = as.numeric(subject))
 
-# Check out data ----------------------------------------------------------
 
-hist(df.demo$total_time_real)
+# Clean data --------------------------------------------------------------
 
-df.s1.subj = df.s1 %>% group_by(subject) %>%
-  summarize(total.time = sum(rt) / 60000)
-hist(df.s1.subj$total.time)
+
+ds.reversed = 6:10
+mindfulness.reversed = c(3,4,7,8,9,13)
+sk.reversed = c(4,5,6,7,8,9,10,11,12)
+
+df.demo$decisionstyle = numeric(nrow(df.demo))
+df.demo$mindfulness = numeric(nrow(df.demo))
+df.demo$sk = numeric(nrow(df.demo))
+
+for (i in 1:nrow(df.demo)) {
+  ds = as.numeric.vector(df.demo$decisionstyle_responses[i])
+  ds[ds.reversed] = 100 - ds[ds.reversed]
+  df.demo$decisionstyle[i] = mean(ds)
+  
+  mindfulness = as.numeric.vector(df.demo$mindfulness_responses[i])
+  mindfulness[mindfulness.reversed] = 100 - mindfulness[mindfulness.reversed]
+  df.demo$mindfulness[i] = mean(mindfulness)
+  
+  sk = as.numeric.vector(df.demo$selfknowledge_responses[i])
+  sk[sk.reversed] = 100 - sk[sk.reversed]
+  df.demo$sk[i] = mean(sk)
+}
+
+df.demo = df.demo %>%
+  mutate(choice.domain.fac = factor(choice_domain > median(choice_domain), c(F,T), c('Low', 'High')),
+         decisionstyle.fac = factor(decisionstyle > median(decisionstyle), c(F,T), c('Low', 'High')),
+         mindfulness.fac = factor(mindfulness > median(mindfulness), c(F,T), c('Low', 'High')),
+         sk.fac = factor(sk > median(sk), c(F,T), c('Low', 'High')))
+
+df.s1$choice.domain = numeric(nrow(df.s1))
+df.s1$decisionstyle = numeric(nrow(df.s1))
+df.s1$mindfulness = numeric(nrow(df.s1))
+df.s1$sk = numeric(nrow(df.s1))
+
+for (i in 1:nrow(df.s1)) {
+  demo.row = as.character(df.demo$subject) == as.character(df.s1$subject[i])
+  if (any(demo.row)) {
+    df.s1$choice.domain[i] = df.demo$choice_domain[demo.row]
+    df.s1$decisionstyle[i] = df.demo$decisionstyle[demo.row]
+    df.s1$mindfulness[i] = df.demo$mindfulness[demo.row]
+    df.s1$sk[i] = df.demo$sk[demo.row]
+  } else {
+    df.s1$choice.domain[i] = NA
+    df.s1$decisionstyle[i] = NA
+    df.s1$mindfulness[i] = NA
+    df.s1$sk[i] = NA
+  }
+}
+
+df.s1 = df.s1 %>%
+  mutate(choice.domain.fac = factor(choice.domain > median(choice.domain, na.rm = T), c(F,T), c('Low', 'High')),
+         decisionstyle.fac = factor(decisionstyle > median(decisionstyle, na.rm = T), c(F,T), c('Low', 'High')),
+         mindfulness.fac = factor(mindfulness > median(mindfulness, na.rm = T), c(F,T), c('Low', 'High')),
+         sk.fac = factor(sk > median(sk,na.rm = T), c(F,T), c('Low', 'High')))
+
+
+df.s2$choice.domain = numeric(nrow(df.s2))
+df.s2$decisionstyle = numeric(nrow(df.s2))
+df.s2$mindfulness = numeric(nrow(df.s2))
+df.s2$sk = numeric(nrow(df.s2))
+
+for (i in 1:nrow(df.s2)) {
+  demo.row = as.character(df.demo$subject) == as.character(df.s2$subject[i])
+  if (any(demo.row)) {
+    df.s2$choice.domain[i] = df.demo$choice_domain[demo.row]
+    df.s2$decisionstyle[i] = df.demo$decisionstyle[demo.row]
+    df.s2$mindfulness[i] = df.demo$mindfulness[demo.row]
+    df.s2$sk[i] = df.demo$sk[demo.row]
+  } else {
+    df.s2$choice.domain[i] = NA
+    df.s2$decisionstyle[i] = NA
+    df.s2$mindfulness[i] = NA
+    df.s2$sk[i] = NA
+  }
+}
+
+df.s2 = df.s2 %>%
+  mutate(choice.domain.fac = factor(choice.domain > median(choice.domain, na.rm = T), c(F,T), c('Low', 'High')),
+         decisionstyle.fac = factor(decisionstyle > median(decisionstyle, na.rm = T), c(F,T), c('Low', 'High')),
+         mindfulness.fac = factor(mindfulness > median(mindfulness, na.rm = T), c(F,T), c('Low', 'High')),
+         sk.fac = factor(sk > median(sk,na.rm = T), c(F,T), c('Low', 'High')))
+
 
 ## Stage 1 choices
 atts = c('Number of Bedrooms','Size of Garage','Amount of Crime in Neighborhood','Proximity to Parks','Proximity to Waterfront/Beaches',
-'Proximity to Cafes/Restaurants','Noise Pollution','Reputation of Closest School','Amount of Natural Light','Age of Building','Washer/Dryer','Size of Yard','Fireplace',
-'Central AC','Climate of Area','Hardwood Floors','Freshly Painted Exterior','Size of Home')
+         'Proximity to Cafes/Restaurants','Noise Pollution','Reputation of Closest School','Amount of Natural Light','Age of Building','Washer/Dryer','Size of Yard','Fireplace',
+         'Central AC','Climate of Area','Hardwood Floors','Freshly Painted Exterior','Size of Home')
+
+att.nums = 1:length(atts)
+att.nums.str = as.character(att.nums)
 
 atts.opt1 = paste0(atts,'.opt1')
 atts.opt2 = paste0(atts,'.opt2')
 atts.opt1.enclosed = paste0('`',atts.opt1,'`')
 atts.opt2.enclosed = paste0('`',atts.opt2,'`')
+atts.opt.diff = paste0(atts,'.diff')
+atts.opt.diff.enclosed = paste0('`',atts.opt.diff,'`')
+
+#df.s1.modeling = df.s1
 
 df.s1[,atts.opt1] = NA
 df.s1[,atts.opt2] = NA
+#df.s1.modeling[,att.nums.str] = NA
+
+df.avail.atts = data.frame(matrix(0,nrow = nrow(df.s1), ncol = length(atts)+1))
+colnames(df.avail.atts) = c('subject.num', atts.opt1)
+df.avail.atts$subject.num = df.s1$subject.num
 
 for (i in 1:nrow(df.s1)) {
   cur.atts = as.string.vector(df.s1$attributes[i])
   cur.opt1.vals = as.string.vector(df.s1$opt1_values[i])
   cur.opt2.vals = as.string.vector(df.s1$opt2_values[i])
   
-  #att.nums = numeric(length(cur.atts))
+  cur.att.nums = numeric(length(cur.atts))
   for (j in 1:length(cur.atts)) {
-    #att.nums[j] = which(cur.atts[j] == atts)
-    df.s1[i,paste0(cur.atts[j],'.opt1')] = cur.opt1.vals[j]
-    df.s1[i,paste0(cur.atts[j],'.opt2')] = cur.opt2.vals[j]
+    cur.att.nums[j] = which(cur.atts[j] == atts)
+    df.s1[i,atts.opt1[cur.att.nums[j]]] = cur.opt1.vals[j]
+    df.s1[i,atts.opt2[cur.att.nums[j]]] = cur.opt2.vals[j]
+    df.avail.atts[i,atts.opt1[cur.att.nums[j]]] = 1
   }
   
-  #df.s1$att.nums[i] = as.string(att.nums)
+  df.s1$att.nums[i] = as.string(cur.att.nums)
 }
 
 # clean up data
@@ -145,8 +239,8 @@ for (i in 1:length(atts)) {
     df.s1[,cur.att.opt1] = as.numeric(factor(df.s1[,cur.att.opt1], scale2))
     df.s1[,cur.att.opt2] = as.numeric(factor(df.s1[,cur.att.opt2], scale2))
   } else if (atts[i] %in% c('Central AC', 'Fireplace', 'Hardwood Floors', 'Freshly Painted Exterior', 'Washer/Dryer')) {
-    df.s1[,cur.att.opt1] = factor(df.s1[,cur.att.opt1], scale5)
-    df.s1[,cur.att.opt2] = factor(df.s1[,cur.att.opt2], scale5)
+    df.s1[,cur.att.opt1] = as.numeric(factor(df.s1[,cur.att.opt1], scale5))
+    df.s1[,cur.att.opt2] = as.numeric(factor(df.s1[,cur.att.opt2], scale5))
   } else if (atts[i] %in% c('Size of Garage', 'Size of Yard')) {
     df.s1[,cur.att.opt1] = as.numeric(factor(df.s1[,cur.att.opt1], scale1))
     df.s1[,cur.att.opt2] = as.numeric(factor(df.s1[,cur.att.opt2], scale1))
@@ -165,10 +259,131 @@ for (i in 1:length(atts)) {
   }
 }
 
+# compute diffs
+for (i in 1:length(atts)) {
+  df.s1[,paste0(atts[i], '.diff')] = df.s1[,atts.opt2[i]] - df.s1[,atts.opt1[i]]
+}
+
+# normalize attribute values
+df.s1.scaled = df.s1
+for (i in df.s1$subject.num) {
+  subj.rows = df.s1$subject.num == i
+  df.s1.scaled[subj.rows, c(atts.opt1, atts.opt2, atts.opt.diff)] = scale(df.s1[subj.rows, c(atts.opt1, atts.opt2, atts.opt.diff)])
+}
+
+df.s1.scaled.nonan = df.s1.scaled
+for (i in 1:ncol(df.s1.scaled)) {
+  df.s1.scaled.nonan[is.na(df.s1.scaled.nonan[,i]),i] = 0
+}
+
+# Check out data ----------------------------------------------------------
+
+hist(df.demo$total_time_real)
+
+df.s1.subj = df.s1 %>% group_by(subject) %>%
+  summarize(total.time = sum(rt) / 60000)
+hist(df.s1.subj$total.time)
+num.subj = nrow(df.s1.subj)
+
 # run analysis!
 formula = paste0('choice ~ ',
-                 paste(atts.opt1.enclosed, collapse = " + "),
-                 #' + ',
-                 #paste(atts.opt2.enclosed, collapse = " + "),
-                 ' + (1 | subject)')
-m1 = glmer(as.formula(formula), data = df.s1, family = 'binomial')
+                 paste(atts.opt.diff.enclosed, collapse = " + "))
+for (i in df.s1.scaled.nonan$subject.num) {
+  cur.df.s1 = df.s1.scaled.nonan %>% filter(subject.num == i)
+  m = glm(as.formula(formula), cur.df.s1, family = 'binomial')
+  m.coefs = m$coefficients[-1]
+  for (att in 1:length(m.coefs)) {
+    df.s2$fitted.weight.lm[df.s2$subject.num == i & df.s2$attribute == atts[att]] = m.coefs[att]
+  }
+}
+
+# get data for modeling ---------------------------------------------------
+
+write.table(df.s1.scaled %>% select(subject.num, all_of(atts.opt1)), 'modeling_opts1.csv', row.names = F, col.names = F, sep = ",")
+write.table(df.s1.scaled %>% select(subject.num, all_of(atts.opt2)), 'modeling_opts2.csv', row.names = F, col.names = F, sep = ",")
+write.table(df.s1 %>% select(subject.num, choice) %>% mutate(choice = choice + 1), 'modeling_choice.csv', row.names = F, col.names = F, sep = ",")
+write.table(df.avail.atts, 'modeling_avail_atts.csv', row.names = F, col.names = F, sep = ",")
+
+# import modeling results -------------------------------------------------
+
+df.fitted = read.csv('fitted_empirical_weights_priors.csv', header = F)
+colnames(df.fitted) = atts
+
+for (i in 1:nrow(df.s2)) {
+  df.s2$fitted.weight[i] = df.fitted[df.s2$subject.num[i],df.s2$attribute[i]]
+}
+
+df.s2$fitted.weight.abs = abs(df.s2$fitted.weight)
+
+df.s2.subj = df.s2 %>% group_by(subject) %>%
+  summarize(accuracy = cor(fitted.weight.abs, rating))
+for (i in 1:nrow(df.demo)) {
+  df.demo$accuracy[i] = df.s2.subj$accuracy[as.character(df.s2.subj$subject) == as.character(df.demo$subject[i])]
+}
+
+
+ggplot(df.s2, aes(x = fitted.weight, y = fitted.weight.lm)) +
+  geom_point()
+ggplot(df.s2, aes(x = fitted.weight.abs, y = rating)) +
+  geom_point() +
+  geom_smooth(method='lm')
+m1 = lmer(fitted.weight.abs ~ rating + (rating | subject), data = df.s2)
+summary(rePCA(m1))
+m2 = lmer(fitted.weight.abs ~ rating + (1 | subject), data = df.s2)
+summary(rePCA(m2))
+summary(m2)
+
+ggplot(df.s2.subj, aes(x = accuracy)) +
+  geom_histogram()
+
+# moderators --------------------------------------------------------------
+
+ggplot(df.s2, aes(x = fitted.weight.abs, y = rating)) +
+  geom_point() +
+  geom_smooth(method='lm') +
+  facet_wrap(~choice.domain.fac)
+m.choicedomain = lmer(fitted.weight.abs ~ rating * choice.domain + (1 | subject), data = df.s2)
+summary(m.choicedomain)
+
+ggplot(df.demo, aes(x = choice_domain, y = accuracy)) +
+  geom_point() +
+  geom_smooth(method='lm')
+m.choicedomain2 = lm(accuracy ~ choice_domain, data = df.demo)
+summary(m.choicedomain2)
+
+
+ggplot(df.demo, aes(x = decisionstyle, y = accuracy)) +
+  geom_point() +
+  geom_smooth(method='lm')
+m.ds = lm(accuracy ~ decisionstyle, data = df.demo)
+summary(m.ds)
+
+
+ggplot(df.demo, aes(x = mindfulness, y = accuracy)) +
+  geom_point() +
+  geom_smooth(method='lm')
+m.mindfulness = lm(accuracy ~ mindfulness, data = df.demo)
+summary(m.mindfulness)
+
+
+
+ggplot(df.demo, aes(x = sk, y = accuracy)) +
+  geom_point() +
+  geom_smooth(method='lm')
+m.mods = lm(accuracy ~ decisionstyle + mindfulness + sk, data = df.demo)
+summary(m.mods)
+
+ggplot(df.demo, aes(x = decisionstyle, y = mindfulness)) +
+  geom_point() +
+  geom_smooth(method='lm')
+ggplot(df.demo, aes(x = sk, y = mindfulness)) +
+  geom_point() +
+  geom_smooth(method='lm')
+ggplot(df.demo, aes(x = decisionstyle, y = sk)) +
+  geom_point() +
+  geom_smooth(method='lm')
+
+
+# save data ---------------------------------------------------------------
+
+save.image('analysis.rdata')

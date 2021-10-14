@@ -22,6 +22,6 @@ function [logp, results] = mfit_crossval(likfun,param,folds,nstarts)
     
     for i = 1:length(folds)
         disp(['... fold ',num2str(i)]);
-        results(i) = mfit_optimize(likfun,param,folds(i).data,nstarts);
+        results(i) = mfit_optimize_parallel(likfun,param,folds(i).data,nstarts);
         logp(:,i) = mfit_predict(folds(i).testdata,results(i));
     end
