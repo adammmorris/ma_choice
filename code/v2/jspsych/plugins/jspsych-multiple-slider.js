@@ -57,7 +57,7 @@ jsPsych.plugins['multiple-slider'] = (function() {
           slider_start: {
             type: jsPsych.plugins.parameterType.INT,
             pretty_name: 'Slider starting value',
-            default: 0,
+            default: -1,
             description: 'Sets the starting value of the slider',
           },
           step: {

@@ -315,11 +315,15 @@ for (i in 1:nrow(df.s2)) {
 
 df.s2$fitted.weight.abs = abs(df.s2$fitted.weight)
 
-df.s2.subj = df.s2 %>% group_by(subject) %>%
+df.s2.subj = df.s2 %>%
+  group_by(subject) %>%
   summarize(accuracy = cor(fitted.weight.abs, rating))
 for (i in 1:nrow(df.demo)) {
   df.demo$accuracy[i] = df.s2.subj$accuracy[as.character(df.s2.subj$subject) == as.character(df.demo$subject[i])]
 }
+df.s2.subj.split = df.s2 %>% mutate(trial_half = factor(trial < 9, c(F,T), c('First Half', 'Second Half'))) %>%
+  group_by(subject, trial_half) %>%
+  summarize(accuracy = cor(fitted.weight.abs, rating))
 
 
 ggplot(df.s2, aes(x = fitted.weight, y = fitted.weight.lm)) +
@@ -327,6 +331,7 @@ ggplot(df.s2, aes(x = fitted.weight, y = fitted.weight.lm)) +
 ggplot(df.s2, aes(x = fitted.weight.abs, y = rating)) +
   geom_point() +
   geom_smooth(method='lm')
+
 m1 = lmer(fitted.weight.abs ~ rating + (rating | subject), data = df.s2)
 summary(rePCA(m1))
 m2 = lmer(fitted.weight.abs ~ rating + (1 | subject), data = df.s2)
@@ -335,6 +340,11 @@ summary(m2)
 
 ggplot(df.s2.subj, aes(x = accuracy)) +
   geom_histogram()
+ggplot(df.s2.subj, aes(x = trial_half, y = accuracy, color = subject, group = subject)) +
+  geom_point() +
+  geom_line() +
+  guides(color = F, group = F)
+m.retest = lmer()
 
 # moderators --------------------------------------------------------------
 
