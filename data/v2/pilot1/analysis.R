@@ -4,6 +4,7 @@ require(dplyr)
 require(ggplot2)
 require(lme4)
 require(lmerTest)
+require(combinat)
 
 theme_update(strip.background = element_blank(),
              panel.grid.major = element_blank(),
@@ -321,14 +322,41 @@ df.s2.subj = df.s2 %>%
 for (i in 1:nrow(df.demo)) {
   df.demo$accuracy[i] = df.s2.subj$accuracy[as.character(df.s2.subj$subject) == as.character(df.demo$subject[i])]
 }
-df.s2.subj.split = df.s2 %>% mutate(trial_half = factor(trial < 9, c(F,T), c('First Half', 'Second Half'))) %>%
+
+df.s2.subj.split = df.s2 %>% mutate(trial_half = factor(trial %in% combs[,i], c(F,T), c('First Half', 'Second Half'))) %>%
   group_by(subject, trial_half) %>%
   summarize(accuracy = cor(fitted.weight.abs, rating))
+
+combs = combn(1:18,9)
+df.s2.grouped = df.s2 %>% group_by(subject)
+shr = numeric(ncol(combs))
+for (i in 1:ncol(combs)) {
+  acc1 = (df.s2.grouped %>% filter(trial %in% combs[,i]) %>% summarize(accuracy = cor(fitted.weight.abs, rating)))$accuracy
+  acc2 = (df.s2.grouped %>% filter(!(trial %in% combs[,i])) %>% summarize(accuracy = cor(fitted.weight.abs, rating)))$accuracy
+  shr[i] = cor(acc1, acc2)
+}
+
+# get normalized per-subject
+subjects = unique(df.s2$subject.num)
+for (i in subjects) {
+  cur.rows = df.s2$subject.num == i
+  cur.ratings = df.s2[cur.rows,]$rating
+  cur.weights = df.s2[cur.rows,]$fitted.weight.abs
+  df.s2$rating.scaled[cur.rows] = scale(cur.ratings)
+  df.s2$fitted.weight.abs.scaled[cur.rows] = scale(cur.weights)
+}
+
+
+# test modeling results ---------------------------------------------------
+
 
 
 ggplot(df.s2, aes(x = fitted.weight, y = fitted.weight.lm)) +
   geom_point()
 ggplot(df.s2, aes(x = fitted.weight.abs, y = rating)) +
+  geom_point() +
+  geom_smooth(method='lm')
+ggplot(df.s2, aes(x = fitted.weight.abs.scaled, y = rating.scaled)) +
   geom_point() +
   geom_smooth(method='lm')
 
@@ -337,6 +365,9 @@ summary(rePCA(m1))
 m2 = lmer(fitted.weight.abs ~ rating + (1 | subject), data = df.s2)
 summary(rePCA(m2))
 summary(m2)
+m3 = lmer(fitted.weight.abs.scaled ~ rating.scaled + (1 | subject), data = df.s2)
+summary(rePCA(m3))
+summary(m3)
 
 ggplot(df.s2.subj, aes(x = accuracy)) +
   geom_histogram()
