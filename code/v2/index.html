@@ -16,6 +16,7 @@
     <script src='jspsych/plugins/jspsych-instructions.js'></script>
     <script src='jspsych/plugins/jspsych-survey-text.js'></script>
     <script src='jspsych/plugins/jspsych-external-html.js'></script>
+    <script src='jspsych/plugins/jspsych-maxdiff.js'></script>
     <script src='jspsych/plugins/jspsych-html-button-response.js'></script>
     <script src='jspsych/plugins/jspsych-html-button-response-machoice.js'></script>
     <!--<script src='jspsych/plugins/jspsych-image-button-response.js'></script>-->
@@ -64,7 +65,7 @@ var home_attributes= ['Number of Bedrooms','Size of Garage','Amount of Crime in 
 'Proximity to Cafes/Restaurants','Noise Pollution','Reputation of Closest School',
 'Amount of Natural Light','Age of Building','Washer/Dryer','Size of Yard','Fireplace',
 'Central AC','Climate of Area','Hardwood Floors','Freshly Painted Exterior','Size of Home'];
-var yn =['Yes','No'];
+var yn =['No','Yes'];
 var size = ['None', 'Small', 'Medium', 'Large', 'Very Large']; // yard, garage
 var amount = ['Very Low', 'Low', 'Moderate', 'High', 'Very High']; // pollution, crime
 var amount2 = ['Very Little', 'A Little', 'A Moderate Amount', 'A Lot']; // light
@@ -74,7 +75,7 @@ var age = ['Old', 'Medium', 'New'];
 var goodness = ['Very Bad', 'Bad', 'Moderate', 'Good', 'Very Good']; // reputation-school, climate
 
 var home_attributes = [
-	{name: 'Number of Bedrooms', scale: null, lb: 1, ub: 5, postfix: null},
+	{name: 'Number of Bedrooms', scale: null, lb: 1, ub: 5, postfix: ' bdrm'},
 	{name: 'Size of Garage', scale: size},
 	{name: 'Proximity to Parks', scale: prox1},
 	{name: 'Proximity to Cafes/Restaurants', scale: prox1},
@@ -371,9 +372,13 @@ For instance, we'll ask you how much the homes' proximity to parks contributed t
 So if the amount of noise pollution didn't contribute at all, you'd move the slider to 0; if it contributed a moderate amount, you'd move the slider to around 4; \
 and if it completely determined your choice, you'd move the slider to 8. And you can move the slider anywhere in between.",
 
-"We'll also ask you which direction "
-
 "Of course, features will likely have contributed different amounts to your decisions on different trials. Just do your best to report how much each feature contributed on average.",
+
+"We'll also give you a list of possible settings the feature could have taken on, and ask you which setting from that list you would have least preferred while making your choices, \
+and which setting you would have most preferred. Here's an example of what the question will look like:<br><br>\
+<img src='example_introspection2.png' width='50%'</img><br><br>\
+So if, from among these settings, you would have least preferred 'Very High' noise pollution, you would select the corresponding button (in the bottom left corner) for the left column.<br><br>\
+And if you would have most preferred 'Very Low' noise pollution, you would select the correspnding button (in the upper right corner) for the right column.",
 
 "When you're ready, press 'Next'."
 ];
@@ -384,23 +389,34 @@ var attribute_instructions = {
 	show_clickable_nav: true
 };
 
-var label = ['0 <br></br> Did not contribute at all', '1', '2 <br></br> Contributed a little', '3', '4 <br></br> Contributed a moderate amount', '5', '6 <br></br> Contributed a lot', '7', '8<br></br>Completely determined my choices']
-var prompt = '<br><br><br><br>How much did this feature contribute to your decisions overall?<br></br>'
+var label = ['0 <br></br> Did not contribute at all', '1', '2 <br></br> Contributed a little', '3', '4 <br></br> Contributed somewhat', '5', '6 <br></br> Contributed a lot', '7', '8<br></br>Completely determined my choices']
+var prompt = '<br><br><br><br>How much did this feature contribute to your decisions overall?'
 var attribute_ratings = new Array(home_attributes.length);
-var attribute_questions = new Array();
-for (var i = 0; i < home_attributes.length; i++) {
-	attribute_questions.push(home_attributes[i].name);
-}
-var attribute_rating_questions = _.shuffle(attribute_questions);
+var attribute_ratings2 = new Array(home_attributes.length);
 
-for (var i = 0; i < 19; i++) {
+for (var i = 0; i < home_attributes.length; i++) {
+	att = home_attributes[i];
 	attribute_ratings[i] = {
-	  	type: 'html-slider-response',
-	  	stimulus: attribute_rating_questions[i],
-	  	labels: label,
-	 	prompt: prompt,
-	 	data: {which_trial: i, attribute_name: attribute_rating_questions[i]},
+  	type: 'html-slider-response',
+		labels: label,
+  	stimulus: '<b>' + att.name + '</b>',
+		prompt: prompt,
 	 	require_movement: debug ? false : true,
+		on_finish: function(data) {
+			jsPsych.data.addProperties({introspection_choice: data.response, introspection_rt: data.rt});
+		}
+	};
+
+	var cur_scale = att.scale == null ? [att.lb + att.postfix, (Math.round((att.ub + att.lb) / 2)) + att.postfix, att.ub + att.postfix] : att.scale;
+
+	attribute_ratings2[i] = {
+		type: 'maxdiff',
+		alternatives: cur_scale,
+		labels: ['Least Preferred', 'Most Preferred'],
+		preamble: '<b>' + att.name + '</b><br><br>This feature could have taken on various settings, such as: ' + cur_scale.join(', ') +
+		'<br><br>Please choose the setting from this list that you would have least preferred while making your choices (left column),\
+		<br>and the setting that you would have most preferred (right column).<br><br>',
+	 	data: {which_trial: i, attribute_name: att.name},
 		on_finish: function(data) {
 	 		s2_data = {
 				subject: data.subject,
@@ -408,13 +424,18 @@ for (var i = 0; i < 19; i++) {
 				assignmentId: data.assignmentId,
 				trial: data.which_trial,
 	 			attribute: data.attribute_name,
-	 			rating: data.response,
-	 			rt: data.rt
+	 			rating: data.introspection_choice,
+				least_preferred: data.response.left,
+				most_preferred: data.response.right,
+				rt1: data.introspection_rt,
+	 			rt2: data.rt
 	 		}
 	 	save_data(s2_data, 's2');
 		}
-	};
-};
+	}
+}
+
+shuffletwo(attribute_ratings, attribute_ratings2);
 
 var strategy = {
 	type: 'survey-text',
@@ -491,7 +512,7 @@ var decisionstyle_options = [
   "Strongly Agree"
 ];
 
-var decisionstyle_instructions_text = ["Now we'll ask you some questions about your style of making decisions."]
+var decisionstyle_instructions_text = ["Now we'll ask you some more general questions about yourself."]
 var decisionstyle_instructions = {
 	type: 'instructions',
 	pages: decisionstyle_instructions_text,
@@ -519,6 +540,75 @@ var decisionstyle = {
 	  ],
 		on_finish: function(data) {
 			decisionstyle_responses = JSON.parse(data.responses);
+		}
+};
+
+/* social desirability */
+
+var bidr_options = [
+  "Not true",
+  "",
+  "",
+  "Somewhat",
+	"",
+	"",
+  "Very true"
+];
+
+var bidr_responses = null;
+var bidr = {
+    type: 'multiple-slider',
+		require_movement: debug ? false : true,
+		preamble: "<br><b>Please indicate the extent to which each statement is true or false.</b><br><br>(Again, in order to continue to the next page, you must answer each question by moving the slider.)",
+	  questions: [
+	    {prompt: "I have not always been honest with myself.", labels: bidr_options},
+	    {prompt: "I always know why I like things.", labels: bidr_options},
+	    {prompt: "It's hard for me to shut off a disturbing thought.", labels: bidr_options},
+			{prompt: "I never regret my decisions.", labels: bidr_options},
+	    {prompt: "I sometimes lose out on things because I can't make up my mind soon enough.", labels: bidr_options},
+	    {prompt: "I am a completely rational person.", labels: bidr_options},
+	    {prompt: "I am very confident of my judgments.", labels: bidr_options},
+	    {prompt: "I have sometimes doubted my ability as a lover.", labels: bidr_options},
+	    {prompt: "I sometimes tell lies if I have to.", labels: bidr_options},
+			{prompt: "I never cover up my mistakes.", labels: bidr_options},
+	    {prompt: "There have been occasions when I have taken advantage of someone.", labels: bidr_options},
+	    {prompt: "I sometimes try to get even rather than forgive and forget.", labels: bidr_options},
+	    {prompt: "I have said something bad about a friend behind his/her back.", labels: bidr_options},
+	    {prompt: "When I hear people talking privately, I avoid listening.", labels: bidr_options},
+	    {prompt: "I never take things that don't belong to me.", labels: bidr_options},
+	    {prompt: "I don't gossip about other people's business.", labels: bidr_options}
+	  ],
+		on_finish: function(data) {
+			bidr_responses = JSON.parse(data.responses);
+		}
+};
+
+var acs_options = [
+  "Almost never",
+  "Sometimes",
+  "Often",
+  "Always"
+];
+
+var acs_responses = null;
+var acs = {
+    type: 'multiple-slider',
+		require_movement: debug ? false : true,
+		preamble: "<br>Here are some different ways that people can feel about working and concentrating.<br><b>Please indicate how strongly each statement applies to you.</b>",
+	  questions: [
+	    {prompt: "When I am working hard on something, I still get distracted by events around me.", labels: acs_options},
+	    {prompt: "When trying to focus my attention on something, I have difficulty blocking out distracting thoughts.", labels: acs_options},
+	    {prompt: "I have a hard time concentrating when I'm excited about something.", labels: acs_options},
+			{prompt: "I can quickly switch from one task to another.", labels: acs_options},
+	    {prompt: "It takes me a while to get really involved in a new task.", labels: acs_options},
+	    {prompt: "It is difficult for me to coordinate my attention between the listening and writing required when taking notes during lectures.", labels: acs_options},
+	    {prompt: "I can become interested in a new topic very quickly when I need to.", labels: acs_options},
+	    {prompt: "I have a hard time coming up with new ideas quickly.", labels: acs_options},
+	    {prompt: "After being interrupted or distracted, I can easily shift my attention back to what I was doing before.", labels: acs_options},
+			{prompt: "It is easy for me to alternate between two different tasks.", labels: acs_options}
+	  ],
+		on_finish: function(data) {
+			acs_responses = JSON.parse(data.responses);
 		}
 };
 
@@ -660,6 +750,8 @@ var income = {
 			choice_exp: data.choice_exp,
 			choice_domain: data.choice_domain,
 			decisionstyle_responses: Object.values(decisionstyle_responses).join(),
+			bidr_responses: Object.values(bidr_responses).join(),
+			acs_responses: Object.values(acs_responses).join(),
 			mindfulness_responses: Object.values(mindfulness_responses).join(),
 			selfknowledge_responses: Object.values(selfknowledge_responses).join(),
 			mtvScale: data.mtvScale,
@@ -712,7 +804,7 @@ timeline.push(get_id_loop);
 if (!debug) {
 	timeline.push(attnCheck1);
 }
-timeline.push(instructions);
+/*timeline.push(instructions);
 for (var t = 0; t < practice_trials.length; t++) {
 	timeline.push(fixation);
 	timeline.push(practice_trials[t]);
@@ -721,10 +813,11 @@ timeline.push(instructions2);
 for (var t = 0; t < trials.length; t++) {
 	timeline.push(fixation);
 	timeline.push(trials[t]);
-}
+}*/
 timeline.push(attribute_instructions)
 for (var i = 0; i < home_attributes.length; i++) {
 	timeline.push(attribute_ratings[i]);
+	timeline.push(attribute_ratings2[i]);
 }
 timeline.push(strategy);
 timeline.push(consistency);
@@ -734,6 +827,8 @@ timeline.push(choice_exp);
 timeline.push(mtvScale);
 timeline.push(decisionstyle_instructions);
 timeline.push(decisionstyle);
+timeline.push(bidr);
+timeline.push(acs);
 timeline.push(mindfulness_instructions);
 timeline.push(mindfulness);
 timeline.push(selfknowledge_instructions);
@@ -748,6 +843,7 @@ timeline.push(debrief)
 //timeline.push(end);
 jsPsych.init({
 	timeline: timeline,
+	show_progress_bar: true,
    on_finish: function() {
     document.body.innerHTML = '<p><p><p align="center">Thank you for participating in the study!<p align="center"><b>You will be automatically re-directed to Prolific in a few moments.</b></p>';
     setTimeout(function () { location.href = "https://app.prolific.co/submissions/complete?cc=3F3EE65E" }, 5000)
