@@ -1,4 +1,4 @@
-function [results_WAD, results_WP, results_EW, results_TAL, results_LEX] = fitModels(param, data, nstarts, numAtts)
+function [results_WAD, results_WP, results_EW, results_TAL] = fitModels(param, data, nstarts, numAtts)
 
 lbs = [param(1).lb repelem(-1, numAtts)];
 ubs = [param(1).ub repelem(1, numAtts)];
@@ -21,11 +21,11 @@ best_fit_params_TAL = zeros(numSubj, numParams);
 BICs_TAL = zeros(numSubj, 1);
 AICs_TAL = zeros(numSubj, 1);
 
-logpost_LEX = zeros(numSubj, 1);
-loglik_LEX = zeros(numSubj, 1);
-best_fit_params_LEX = zeros(numSubj, numParams);
-BICs_LEX = zeros(numSubj, 1);
-AICs_LEX = zeros(numSubj, 1);
+% logpost_LEX = zeros(numSubj, 1);
+% loglik_LEX = zeros(numSubj, 1);
+% best_fit_params_LEX = zeros(numSubj, numParams);
+% BICs_LEX = zeros(numSubj, 1);
+% AICs_LEX = zeros(numSubj, 1);
 
 parfor s = 1:numSubj
     % EW
@@ -49,17 +49,17 @@ parfor s = 1:numSubj
     AICs_TAL(s) = numParams*2 - 2*loglik_TAL(s);
 
     % LEX
-    LEX_post = @(x) -(getLogLik_WAD(x,data(s)) + param(1).logpdf(x(1)) + ...
-        log(1 / (numAtts * 2)));
-    
-    [x,logpost] = ga(LEX_post, numParams,...
-        [],[],[],[],...
-        lbs,ubs,@my_nonlcon,2:numParams);
-    best_fit_params_LEX(s,:) = x;
-    loglik_LEX(s) = getLogLik_WP(x, data(s));
-    logpost_LEX(s) = -logpost;
-    BICs_LEX(s) = numParams*log(data(s).N) - 2*loglik_LEX(s);
-    AICs_LEX(s) = numParams*2 - 2*loglik_LEX(s);
+%     LEX_post = @(x) -(getLogLik_WAD(x,data(s)) + param(1).logpdf(x(1)) + ...
+%         log(1 / (numAtts * 2)));
+%     
+%     [x,logpost] = ga(LEX_post, numParams,...
+%         [],[],[],[],...
+%         lbs,ubs,@my_nonlcon,2:numParams);
+%     best_fit_params_LEX(s,:) = x;
+%     loglik_LEX(s) = getLogLik_WP(x, data(s));
+%     logpost_LEX(s) = -logpost;
+%     BICs_LEX(s) = numParams*log(data(s).N) - 2*loglik_LEX(s);
+%     AICs_LEX(s) = numParams*2 - 2*loglik_LEX(s);
 end
 
 results_EW = results_WAD;
@@ -82,14 +82,14 @@ results_TAL.x = best_fit_params_TAL;
 results_TAL.bic = BICs_TAL;
 results_TAL.aic = AICs_TAL;
 
-results_LEX = results_WAD;
-results_LEX.K = numParams;
-results_LEX.S = numSubj;
-results_LEX.H = hessians;
-results_LEX.logpost = logpost_LEX';
-results_LEX.loglik = loglik_LEX;
-results_LEX.x = best_fit_params_LEX;
-results_LEX.bic = BICs_LEX;
-results_LEX.aic = AICs_LEX;
+% results_LEX = results_WAD;
+% results_LEX.K = numParams;
+% results_LEX.S = numSubj;
+% results_LEX.H = hessians;
+% results_LEX.logpost = logpost_LEX';
+% results_LEX.loglik = loglik_LEX;
+% results_LEX.x = best_fit_params_LEX;
+% results_LEX.bic = BICs_LEX;
+% results_LEX.aic = AICs_LEX;
 
 end

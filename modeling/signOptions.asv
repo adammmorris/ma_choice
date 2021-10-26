@@ -11,11 +11,5 @@ for i = 1:numAgents
             options_signed(:,1,j,i) = sign(options_signed(:,1,j,i));
         end
     end
-
-    for k = 1:numAtts
-        if do_scale
-            options_signed(k,1,:,i) = normalize(options_signed(k,1,:,i));
-        end
-    end
 end
 end

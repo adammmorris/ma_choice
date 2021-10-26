@@ -410,12 +410,14 @@ for (var i = 0; i < home_attributes.length; i++) {
 	var cur_scale = att.scale == null ? [att.lb + att.postfix, (Math.round((att.ub + att.lb) / 2)) + att.postfix, att.ub + att.postfix] : att.scale;
 
 	attribute_ratings2[i] = {
-		type: 'maxdiff',
-		alternatives: cur_scale,
-		labels: ['Least Preferred', 'Most Preferred'],
+		type: 'survey-multi-choice',
+		questions: [
+			{prompt: "Which of these settings would you have <b>least preferred</b>?", options: cur_scale, required: debug ? false : true, horizontal: true},
+			{prompt: "Which of these settings would you have <b>most preferred</b>?", options: cur_scale, required: debug ? false : true, horizontal: true}
+		]
+		/*labels: ['Least Preferred', 'Most Preferred'],*/
 		preamble: '<b>' + att.name + '</b><br><br>This feature could have taken on various settings, such as: ' + cur_scale.join(', ') +
-		'<br><br>Please choose the setting from this list that you would have least preferred while making your choices (left column),\
-		<br>and the setting that you would have most preferred (right column).<br><br>',
+		'<br><br>Please choose the settings from this list that you would have least preferred and most preferred.',
 	 	data: {which_trial: i, attribute_name: att.name},
 		on_finish: function(data) {
 	 		s2_data = {
@@ -425,8 +427,8 @@ for (var i = 0; i < home_attributes.length; i++) {
 				trial: data.which_trial,
 	 			attribute: data.attribute_name,
 	 			rating: data.introspection_choice,
-				least_preferred: data.response.left,
-				most_preferred: data.response.right,
+				least_preferred: data.response.Q0,
+				most_preferred: data.response.Q1,
 				rt1: data.introspection_rt,
 	 			rt2: data.rt
 	 		}

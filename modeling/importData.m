@@ -1,8 +1,9 @@
 clear
-choices = readmatrix('modeling_choice.csv');
-opts1 = readmatrix('modeling_opts1.csv');
-opts2 = readmatrix('modeling_opts2.csv');
-avail_atts = readmatrix('modeling_avail_atts.csv');
+datapath = '../data/v2/pilot2/';
+choices = readmatrix(strcat(datapath, 'modeling_choice.csv'));
+opts1 = readmatrix(strcat(datapath, 'modeling_opts1.csv'));
+opts2 = readmatrix(strcat(datapath, 'modeling_opts2.csv'));
+avail_atts = readmatrix(strcat(datapath, 'modeling_avail_atts.csv'));
 
 subjects = unique(choices(:,1));
 numSubj = length(subjects);
@@ -28,4 +29,4 @@ for subj_ind = 1:numSubj
     data_real(subj).choices = cur_choices;
 end
 
-save('imported_data');
+save(strcat(datapath, 'imported_data'));

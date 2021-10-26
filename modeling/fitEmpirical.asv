@@ -92,14 +92,7 @@ graphCV(cv_results_avg, [1 3]);
 
 hist(best_model)
 
-save(strcat(datapath,'fit_empirical.mat'));
+save(strcat('fit_empirical.mat'));
 
 %% normalize
 chance = log(.5 ^ 15);
-cv_results_normalized = zeros(numSubj, numModels);
-for i = 1:numSubj
-    best = cv_results_avg(i,best_model(i));
-    cv_results_normalized(i,:) = (cv_results_avg(i,:) - chance) / (best - chance);
-end
-
-writematrix(cv_results_normalized, strcat(datapath, 'cv_results.csv'))

@@ -3,7 +3,7 @@ function [loglik] = getLogLik_WAD(parameters, data)
 % parameters: invTemp weights
 % data: structure with .choices and .options
 
-options = data.options;
+options = signOptions(data.options, false, true);
 choices = data.choices;
 options_dim = size(options);
 if isfield(data, 'avail_atts')
