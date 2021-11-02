@@ -65,6 +65,7 @@ theme_black = function(base_size = 12, base_family = "") {
     )
 }
 se = function(x) {return(sd(x, na.rm = T) / sqrt(sum(!is.na(x))))}
+se.prop = function(x) {return(sqrt(mean(x, na.rm = T) * (1-mean(x, na.rm = T)) / sum(!is.na(x))))}
 as.string.vector = function(x) {
   return(strsplit(x,',')[[1]])
 }
@@ -166,6 +167,8 @@ for (i in df.s1$subject.num) {
   subj.rows = df.s1$subject.num == i
   df.s1.scaled[subj.rows, c(atts.opt1, atts.opt2, atts.opt.diff)] = scale(df.s1[subj.rows, c(atts.opt1, atts.opt2, atts.opt.diff)])
 }
+
+for (i in atts.opt1)
 
 # same thing, except get rid of nan's
 df.s1.scaled.nonan = df.s1.scaled
@@ -278,6 +281,10 @@ for (i in df.s1.scaled.nonan$subject.num) {
   }
 }
 
+# y variable: choice (0=left or 1=right)
+# x variables: number of bedrooms for the left option, size of house for the left option, ...
+glm(choice ~ `Number of Bedrooms.opt1` + `Size of Home.opt1` + ..., data = df.s1)
+
 # who selected which model?
 ggplot(df.demo, aes(x = chosen.model.fac)) +
   geom_histogram(stat = 'count')
@@ -317,10 +324,13 @@ for (i in subjects) {
 # get subject-level accuracies
 df.s2.subj = df.s2 %>%
   group_by(subject.num) %>%
-  summarize(accuracy = cor(fitted.weight.scaled, rating.signed.scaled))
+  summarize(accuracy = cor(fitted.weight, rating.signed))
 for (i in 1:nrow(df.demo)) {
   df.demo$accuracy[i] = df.s2.subj$accuracy[df.s2.subj$subject.num == df.demo$subject.num[i]]
 }
+
+test = df.s2 %>% group_by(attribute) %>%
+  summarize(linear = mean(linear))
 
 # these are my weird attempts at doing split-half reliability estimates
 # df.s2.subj.split = df.s2 %>% mutate(trial_half = factor(trial %in% combs[,i], c(F,T), c('First Half', 'Second Half'))) %>%
@@ -367,20 +377,55 @@ df.demo = df.demo %>% mutate(chose.correct.model = chosen.model.num == best.mode
 # test modeling results ---------------------------------------------------
 
 ## process awareness
+pct.correct = mean(df.demo$chose.correct.model)
+pct.correct.se = se.prop(df.demo$chose.correct.model)
+c(pct.correct - 1.96 * pct.correct.se, pct.correct + 1.96 * pct.correct.se)
+
 ggplot(df.demo, aes(x = best.model.fac, fill = chosen.model.fac)) +
-  geom_bar(position = 'dodge')
+  geom_bar(position = 'dodge') +
+  labs(x = '', y = '') +
+  guides(fill = guide_legend(title = 'Reported model', title.position = 'top', title.hjust = .5)) +
+  theme(legend.position = 'top') +
+  scale_y_continuous(breaks = NULL)
 ggplot(df.demo, aes(x = signed_weights_real, fill = signed_weights)) +
   geom_bar(position = 'dodge')
 ggplot(df.demo, aes(x = signed_attributes_real, fill = signed_attributes)) +
   geom_bar(position = 'dodge')
 
+pct.correct = mean(df.demo$chosen.model.ll)
+pct.correct.se = se(df.demo$chosen.model.ll)
+c(pct.correct - 1.96 * pct.correct.se, pct.correct + 1.96 * pct.correct.se)
+
 ggplot(df.demo, aes(x = chosen.model.ll)) +
-  geom_histogram()
+  geom_histogram(color = 'black') +
+  labs(x = "Scaled cross-validated likelihood of\nobserved choices given reported model",
+       y = "Number of\nsubjects\n") +
+  scale_y_continuous(breaks = NULL) +
+  #geom_segment(aes(x = 0, y = 0, xend = 0, yend = 24), color = 'red', linetype = 'dashed') +
+  geom_vline(xintercept = 0, color = 'red', linetype = 'dashed') +
+  geom_vline(xintercept = 1, color = 'red', linetype = 'dashed') +
+  geom_vline(xintercept = mean(df.demo$chosen.model.ll), size = 1.5, linetype = 'longdash')
 ggplot(df.demo, aes(x = chosen.model.ll, y = accuracy)) +
-  geom_
+  geom_point() +
+  geom_smooth(method='lm')
 
 
 ## parameter awareness
+# all
+ggplot(df.s2 %>% mutate(rating.signed = rating.signed / 100), aes(x = rating.signed, y = fitted.weight)) +
+  geom_point() +
+  geom_smooth(method='lm') +
+  labs(x = '', y = '') +
+  scale_x_continuous(breaks = c(-1, 0, 1), limits = c(-1, 1.05)) +
+  scale_y_continuous(breaks = c(-1, 0, 1), limits = c(-1, 1.05))
+m = lmer(fitted.weight ~ rating.signed + (1 | subject), data = df.s2)
+summary(m)
+r2beta(m, method = 'kr')
+standardize_parameters(m)
+
+ggplot(df.s2, aes(x = fitted.weight.scaled, y = rating.signed.scaled)) +
+  geom_point() +
+  geom_smooth(method='lm')
 # wad & wp
 ggplot(df.s2 %>% filter(chosen.model %in% c('WAD', 'WP')), aes(x = fitted.weight, y = rating.signed)) +
   geom_point() +
@@ -436,7 +481,14 @@ summary(m3)
 
 # plot subject-level accuracies
 ggplot(df.s2.subj, aes(x = accuracy)) +
-  geom_histogram()
+  geom_histogram(color = 'black') +
+  geom_vline(xintercept = mean(df.s2.subj$accuracy, na.rm = T), size = 1.5, linetype = 'longdash') +
+  labs(x = '', y = '') +
+  scale_y_continuous(breaks = NULL) +
+  scale_x_continuous(breaks = c(0, 0.5, 1.0), limits = c(0,1))
+accuracy.mean = mean(df.s2.subj$accuracy, na.rm = T)
+accuracy.se = se(df.s2.subj$accuracy)
+c(accuracy.mean - 1.96 * accuracy.se, accuracy.mean, accuracy.mean + 1.96*accuracy.se)
 ggplot(df.s2.subj, aes(x = trial_half, y = accuracy, color = subject, group = subject)) +
   geom_point() +
   geom_line() +
@@ -462,6 +514,7 @@ ggplot(df.demo, aes(x = mindfulness, y = accuracy)) +
   geom_point() +
   geom_smooth(method='lm')
 m.mindfulness = lm(accuracy ~ mindfulness, data = df.demo)
+m.mindfulness = glm(chose.correct.model ~ mindfulness, data = df.demo, family = 'binomial')
 summary(m.mindfulness)
 
 ggplot(df.demo, aes(x = sk, y = accuracy)) +
@@ -476,9 +529,22 @@ summary(m.bidr)
 
 ggplot(df.demo, aes(x = acs, y = accuracy)) +
   geom_point() +
-  geom_smooth(method='lm')
-m.acs = lm(accuracy ~ acs, data = df.demo)
-summary(m.acs)
+  geom_smooth(method='lm') +
+  labs(x = "Attentional Control Scale\nscore", y = "Parameter awareness\nscore") +
+  scale_x_continuous(breaks = c(20,100), limits = c(20,100)) +
+  scale_y_continuous(breaks = c(0,1), limits = c(0,1))
+m.acs1 = lm(accuracy ~ acs, data = df.demo)
+summary(m.acs1)
+standardize_parameters(m.acs1)
+ggplot(df.demo, aes(x = acs, y = chosen.model.ll)) +
+  geom_point() +
+  geom_smooth(method='lm') +
+  labs(x = "Attentional Control Scale\nscore", y = "Process awareness\nscore") +
+  scale_x_continuous(breaks = c(20,100), limits = c(20,100)) +
+  scale_y_continuous(breaks = c(-2,-1,0,1), limits = c(-2,1.4))
+m.acs2 = glm(chose.correct.model ~ acs, data = df.demo, family = 'binomial')
+summary(m.acs2)
+standardize_parameters(m.acs2)
 
 m.mods = lm(accuracy ~ decisionstyle + mindfulness + sk + bidr + acs, data = df.demo)
 summary(m.mods)
