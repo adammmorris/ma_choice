@@ -27,14 +27,14 @@ params_WAD = zeros(numAgents, numParams);
 params_WP = zeros(numAgents, numParams);
 params_EW = zeros(numAgents, numParams);
 params_TAL = zeros(numAgents, numParams);
-params_LEX = zeros(numAgents, numParams);
+%params_LEX = zeros(numAgents, numParams);
 
 for agent = 1:numAgents
     params_WAD(agent, :) = [inv_temp(agent) weights(agent,:)];
     params_WP(agent, :) = [inv_temp(agent) weights(agent,:)];
     params_EW(agent, :) = [inv_temp(agent) weights_signed(agent,:)];
     params_TAL(agent, :) = [inv_temp(agent) weights_signed(agent,:)];
-    params_LEX(agent, :) = [inv_temp(agent) weights_lex(agent,:)];
+    %params_LEX(agent, :) = [inv_temp(agent) weights_lex(agent,:)];
 end
 
 %% simulate training & test data

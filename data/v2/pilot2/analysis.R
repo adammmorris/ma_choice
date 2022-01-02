@@ -6,6 +6,7 @@ require(lme4)
 require(lmerTest)
 require(combinat)
 require(effectsize)
+require(RColorBrewer)
 
 theme_update(strip.background = element_blank(),
              panel.grid.major = element_blank(),
@@ -387,6 +388,18 @@ ggplot(df.demo, aes(x = best.model.fac, fill = chosen.model.fac)) +
   guides(fill = guide_legend(title = 'Reported model', title.position = 'top', title.hjust = .5)) +
   theme(legend.position = 'top') +
   scale_y_continuous(breaks = NULL)
+
+# do heatmap
+df.demo.heat = df.demo %>% group_by(chosen.model.fac, best.model.fac) %>%
+  summarize(num.subj = n()) %>%
+  ungroup() %>%
+  mutate(num.subj.norm = num.subj / max(num.subj),
+         num.subj.fac = as.factor(num.subj))
+ggplot(df.demo.heat, aes(x = best.model.fac, y = chosen.model.fac, fill = num.subj.fac, alpha = num.subj.fac)) +
+  geom_tile() +
+  labs(x = '', y = '') +
+  scale_fill_brewer(palette = 'YlOrRd')
+
 ggplot(df.demo, aes(x = signed_weights_real, fill = signed_weights)) +
   geom_bar(position = 'dodge')
 ggplot(df.demo, aes(x = signed_attributes_real, fill = signed_attributes)) +
@@ -398,8 +411,9 @@ c(pct.correct - 1.96 * pct.correct.se, pct.correct + 1.96 * pct.correct.se)
 
 ggplot(df.demo, aes(x = chosen.model.ll)) +
   geom_histogram(color = 'black') +
-  labs(x = "Scaled cross-validated likelihood of\nobserved choices given reported model",
-       y = "Number of\nsubjects\n") +
+  #labs(x = "Scaled cross-validated likelihood of\nobserved choices given reported model",
+  #     y = "Number of\nsubjects\n") +
+  labs(x = "", y = "") +
   scale_y_continuous(breaks = NULL) +
   #geom_segment(aes(x = 0, y = 0, xend = 0, yend = 24), color = 'red', linetype = 'dashed') +
   geom_vline(xintercept = 0, color = 'red', linetype = 'dashed') +
@@ -412,9 +426,9 @@ ggplot(df.demo, aes(x = chosen.model.ll, y = accuracy)) +
 
 ## parameter awareness
 # all
-ggplot(df.s2 %>% mutate(rating.signed = rating.signed / 100), aes(x = rating.signed, y = fitted.weight)) +
+ggplot(df.s2 %>% mutate(rating.signed = rating.signed / 100), aes(x = fitted.weight, y = rating.signed)) +
   geom_point() +
-  geom_smooth(method='lm') +
+  #geom_smooth() +
   labs(x = '', y = '') +
   scale_x_continuous(breaks = c(-1, 0, 1), limits = c(-1, 1.05)) +
   scale_y_continuous(breaks = c(-1, 0, 1), limits = c(-1, 1.05))
