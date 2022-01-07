@@ -560,6 +560,27 @@ m.acs2 = glm(chose.correct.model ~ acs, data = df.demo, family = 'binomial')
 summary(m.acs2)
 standardize_parameters(m.acs2)
 
+# power analysis
+p_vals = numeric(100)
+df.pwr = df.demo
+for (i in 1:100) {
+  print(i)
+  resampled <-
+    df.pwr %>%
+    distinct(subject) %>%
+    slice_sample(n = 250, replace = T) %>%
+    group_by(subject) %>%
+    mutate(instance = row_number()) %>%
+    ungroup() %>%
+    left_join(df.pwr,
+              by = "subject") %>%
+    mutate(subject = str_c(subject, instance))
+  
+  resampled_model <- glm(chose.correct.model ~ acs, family = 'binomial',
+                        data = resampled)
+  p_vals[i] <- summary(resampled_model)$coefficients[2,4]
+}
+
 m.mods = lm(accuracy ~ decisionstyle + mindfulness + sk + bidr + acs, data = df.demo)
 summary(m.mods)
 
