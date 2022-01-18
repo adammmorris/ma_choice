@@ -1,5 +1,5 @@
 %% load simulated data
-% this data (100 agents) was simulated using the WAD model (see the naturalistic multiattribute choice paper).
+% this data (20 agents) was simulated using the WAD model (see the naturalistic multiattribute choice paper).
 % the parameter structure is defined in "param_struct", 
 % and the actual parameters used are stored in "params_WAD".
 
