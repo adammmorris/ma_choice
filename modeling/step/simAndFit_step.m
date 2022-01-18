@@ -4,7 +4,7 @@
 clear
 addpath("mfit/");
 
-numAgents = 100;
+numAgents = 25;
 numAtts = 10;
 numChoices = 75;
 numValuesPerAtt = 5;
@@ -15,6 +15,18 @@ weights = normrnd(weight_params(1),weight_params(2),numAgents,numAtts);
 [~, max_weight_ind] = max(abs(weights),[],2);
 weights_signed = sign(weights);
 
+%steps_template = [1 2 3 0 0 0 0 0 0 0 0 0 0 0 0];
+steps_template = [1 1 2 2 3 3 0 0 0 0 0 0 0 0 0];
+%steps_template = ones(1,numAtts);
+steps = zeros(numAgents, numAtts);
+for i = 1:numAgents
+    [weights_sorted, weights_order] = sort(abs(weights(i,:)),'descend');
+    
+    for j = 1:numAtts
+        steps(i, weights_order(j)) = steps_template(j);
+    end
+end
+
 gamma_bounds = [1 5];
 inv_temp = gamrnd(gamma_bounds(1),gamma_bounds(2),numAgents,1);
 
@@ -23,6 +35,10 @@ for agent = 1:numAgents
     params_WP(agent, :) = [inv_temp(agent) weights(agent,:)];
     params_EW(agent, :) = [inv_temp(agent) weights_signed(agent,:)];
     params_TAL(agent, :) = [inv_temp(agent) weights_signed(agent,:)];
+    params_WAD_step(agent, :) = [inv_temp(agent) weights(agent,:) steps(agent,:)];
+    params_WP_step(agent, :) = [inv_temp(agent) weights(agent,:) steps(agent,:)];
+    params_EW_step(agent, :) = [inv_temp(agent) weights_signed(agent,:) steps(agent,:)];
+    params_TAL_step(agent, :) = [inv_temp(agent) weights_signed(agent,:) steps(agent,:)];
 end
 
 %% make param structures
@@ -31,7 +47,7 @@ param_struct(1).name = 'inverse temperature';
 param_struct(1).logpdf = @(x) sum(log(gampdf(x,gamma_bounds(1),gamma_bounds(2))));  % log density function for prior
 param_struct(1).lb = 0;    % lower bound
 param_struct(1).ub = 50;   % upper bound
-param_struct(1).int = 0;   % constrained to be an integer? 0 
+param_struct(1).int = 0;   % constrained to be an integer?
 
 % set up weights
 for i = 1:numAtts
@@ -52,19 +68,51 @@ for i = 1:numAtts
     param_struct_signedweights(i+1).int = 1;
 end
 
+% set up step parameters
+param_struct_step = param_struct;
+param_struct_signedweights_step = param_struct_signedweights;
+for i = 1:numAtts
+    param_struct_step(i+1+numAtts).name = strcat('step',string(i));
+    param_struct_step(i+1+numAtts).lb = 0;    % lower bound
+    param_struct_step(i+1+numAtts).ub = 3;   % upper bound
+    param_struct_step(i+1+numAtts).logpdf = @(x) (1/2 * (x == 0) + 1/6 * (x ~= 0));
+    param_struct_step(i+1+numAtts).int = 1;
+
+    param_struct_signedweights_step(i+1+numAtts).name = strcat('step',string(i));
+    param_struct_signedweights_step(i+1+numAtts).lb = 0;    % lower bound
+    param_struct_signedweights_step(i+1+numAtts).ub = 3;   % upper bound
+    param_struct_signedweights_step(i+1+numAtts).logpdf = @(x) (1/2 * (x == 0) + 1/6 * (x ~= 0));
+    param_struct_signedweights_step(i+1+numAtts).int = 1;
+end
+
 nstarts = 1;
 numParams = length(param_struct);
+numParams_step = length(param_struct_step);
 
 %% simulate training & test data
 [data_WAD] = generateData(numChoices, numAgents, numAtts, numValuesPerAtt, params_WAD, false);
+[data_WAD_test] = generateData(numChoices, numAgents, numAtts, numValuesPerAtt, params_WAD, false);
+
 [data_WP] = generateData(numChoices, numAgents, numAtts, numValuesPerAtt, params_WP, true);
 [data_EW] = generateData(numChoices, numAgents, numAtts, numValuesPerAtt, params_EW, false);
 [data_TAL] = generateData(numChoices, numAgents, numAtts, numValuesPerAtt, params_TAL, true);
 
+[data_WAD_step, probs_gen] = generateData(numChoices, numAgents, numAtts, numValuesPerAtt, params_WAD_step, false);
+[data_WAD_step_test] = generateData(numChoices, numAgents, numAtts, numValuesPerAtt, params_WAD_step, false);
+
+[data_WP_step] = generateData(numChoices, numAgents, numAtts, numValuesPerAtt, params_WP_step, true);
+[data_EW_step] = generateData(numChoices, numAgents, numAtts, numValuesPerAtt, params_EW_step, false);
+[data_TAL_step] = generateData(numChoices, numAgents, numAtts, numValuesPerAtt, params_TAL_step, true);
 
 %% fit models
+
+[results_WADs_WADs, results_WADs_WPs, results_WADs_EWs, results_WADs_TALs] = ...
+    fitModels_step(param_struct_step, param_struct_signedweights_step, data_WAD_step, {'WAD'});%, results_WADs_WADs.x(1,:), params_WAD_step(1,:), probs_gen);
 [results_WADs_WAD, results_WADs_WP, results_WADs_EW, results_WADs_TAL] = ...
     fitModels(param_struct, param_struct_signedweights, data_WAD_step, nstarts, {'WAD', 'WP'});
+mean(mfit_predict(data_WAD_step_test, results_WADs_WADs))
+mean(mfit_predict(data_WAD_step_test, results_WADs_WAD))
+mfit_predict(data_WAD_step_test, results_WADs_WADs) - mfit_predict(data_WAD_step_test, results_WADs_WAD)
 
 [results_WP_WAD, results_WP_WP, results_WP_EW, results_WP_TAL, results_WP_LEX] = ...
     fitModels(param_struct, data_WP, nstarts, numAtts);
@@ -126,6 +174,20 @@ for i = 1:numParams
 end
 cors_TAL(1)
 mean(cors_TAL(2:end))
+
+% step
+cors_WAD_step = zeros(numParams_step,1);
+diffs_WAD_step = zeros(numParams_step,1);
+equal_WAD_step = zeros(numParams_step,1);
+for i = 1:numParams_step
+    cors_WAD_step(i) = corr(params_WAD_step(:,i), results_WADs_WADs.x(:,i));
+    diffs_WAD_step(i) = mean(abs(params_WAD_step(:,i) - results_WADs_WADs.x(:,i)));
+    equal_WAD_step(i) = mean(params_WAD_step(:,i) == results_WADs_WADs.x(:,i));
+end
+mean(cors_WAD_step(2:(numAtts+1)))
+mean(cors_WAD_step((numAtts+2):end))
+equal_WAD_step((numAtts+2):end)
+scatter(params_WAD_step(:,(numAtts+2):end), results_WAD_WAD.x(:,(numAtts+2):end), 'jitter', 'on')
 
 bms_results_WAD = mfit_bms(results_WAD_all, 1);
 bms_results_WAD.pxp
