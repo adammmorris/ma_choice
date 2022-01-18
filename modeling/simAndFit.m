@@ -4,7 +4,7 @@
 clear
 addpath("mfit/");
 
-numAgents = 100;
+numAgents = 20;
 numAtts = 10;
 numChoices = 75;
 numValuesPerAtt = 5;
