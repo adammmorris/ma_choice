@@ -1,5 +1,5 @@
 clear
-datapath = '../data/v2/pilot2/';
+datapath = '../data/v3_nosteps/real1/';
 choices = readmatrix(strcat(datapath, 'modeling_choice.csv'));
 opts1 = readmatrix(strcat(datapath, 'modeling_opts1.csv'));
 opts2 = readmatrix(strcat(datapath, 'modeling_opts2.csv'));
@@ -27,6 +27,11 @@ for subj_ind = 1:numSubj
     data_real(subj).options = cur_options;
     data_real(subj).avail_atts = cur_avail_atts;
     data_real(subj).choices = cur_choices;
+end
+
+data_real_scaled = data_real;
+for i = 1:length(data_real_scaled)
+    data_real_scaled(i).options = signOptions(data_real_scaled(i).options,false,true);
 end
 
 save(strcat(datapath, 'imported_data'));

@@ -189,6 +189,8 @@ df.demo$mindfulness = numeric(nrow(df.demo))
 df.demo$sk = numeric(nrow(df.demo))
 df.demo$bidr = numeric(nrow(df.demo))
 df.demo$acs = numeric(nrow(df.demo))
+df.demo$acs.focusing = numeric(nrow(df.demo))
+df.demo$acs.shifting = numeric(nrow(df.demo))
 
 for (i in 1:nrow(df.demo)) {
   ds = as.numeric.vector(df.demo$decisionstyle_responses[i])
@@ -218,6 +220,8 @@ for (i in 1:nrow(df.demo)) {
   acs = as.numeric.vector(df.demo$acs_responses[i])
   acs[acs.reversed] = 100 - acs[acs.reversed]
   df.demo$acs[i] = mean(acs)
+  df.demo$acs.focusing[i] = mean(acs[1:5])
+  df.demo$acs.shifting[i] = mean(acs[6:10])
   df.s1$acs[df.s1$subject == df.demo$subject[i]] = mean(acs)
   df.s2$acs[df.s2$subject == df.demo$subject[i]] = mean(acs)
 }
@@ -541,9 +545,9 @@ ggplot(df.demo, aes(x = bidr, y = accuracy)) +
 m.bidr = lm(accuracy ~ bidr, data = df.demo)
 summary(m.bidr)
 
-ggplot(df.demo, aes(x = acs, y = accuracy)) +
+ggplot(df.demo, aes(x = acs.shifting, y = accuracy)) +
   geom_point() +
-  geom_smooth(method='lm') +
+  geom_smooth(method='lm', color = 'black') +
   labs(x = "Attentional Control Scale\nscore", y = "Parameter awareness\nscore") +
   scale_x_continuous(breaks = c(20,100), limits = c(20,100)) +
   scale_y_continuous(breaks = c(0,1), limits = c(0,1))
@@ -552,7 +556,7 @@ summary(m.acs1)
 standardize_parameters(m.acs1)
 ggplot(df.demo, aes(x = acs, y = chosen.model.ll)) +
   geom_point() +
-  geom_smooth(method='lm') +
+  geom_smooth(method='lm', color = 'black') +
   labs(x = "Attentional Control Scale\nscore", y = "Process awareness\nscore") +
   scale_x_continuous(breaks = c(20,100), limits = c(20,100)) +
   scale_y_continuous(breaks = c(-2,-1,0,1), limits = c(-2,1.4))

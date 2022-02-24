@@ -14,7 +14,7 @@ for i = 1:numAgents
 
     for k = 1:numAtts
         if do_scale
-            options_signed(k,1,:,i) = rescale(options_signed(k,1,:,i));
+            options_signed(k,1,:,i) = rescale(options_signed(k,1,:,i), -1, 1);
         end
     end
 end

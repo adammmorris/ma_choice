@@ -1,8 +1,9 @@
-function [cv_WAD, cv_WP, cv_EW, cv_TAL] = crossValidateModels(data, results_all)
-cv_WAD = mfit_predict(data, results_all(1));
-cv_WP = mfit_predict(data, results_all(2));
-cv_EW = mfit_predict(data, results_all(3));
-cv_TAL = mfit_predict(data, results_all(4));
-%cv_LEX = mfit_predict(data, results_all(5));
-
+function [cv] = crossValidateModels(data, results)
+numModels = length(results);
+numSubj = length(data);
+cv = zeros(numSubj,numModels);
+for i = 1:numModels
+    for s = 1:numSubj
+        cv(s,i) = results(i).likfun(results(i).x(s,:),data(s));
+    end
 end

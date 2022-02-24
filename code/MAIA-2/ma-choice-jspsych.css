@@ -20,12 +20,12 @@
 }
 
 .left {
-  width: 60%;
+  width: 50%;
   height: fit-content;
 }
 
 .right {
-  width: 40%;
+  width: 50%;
   height: fit-content;
 }
 div.preamble-2 {
@@ -142,10 +142,10 @@ div.preamble-2 {
 
 .jspsych-slider {
   appearance: none;
-  -webkit-appearance: none; 
+  -webkit-appearance: none;
   -moz-appearance: none;
-  width: 100%; 
-  background: transparent; 
+  width: 100%;
+  background: transparent;
 }
 .jspsych-slider:focus {
   outline: none;

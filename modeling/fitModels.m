@@ -1,78 +1,59 @@
-function [results_WAD, results_WP, results_EW, results_TAL] = fitModels(param_struct, param_struct_signedweights, data, nstarts, which_models)
-
-if nargin < 5, which_models = {'WAD', 'WP', 'EW', 'TAL'}; end
+function [results] = fitModels(param_structs, data)
 
 numSubj = length(data);
 hessians = cell(numSubj, 1);
 
-lik = @(x,d) getLogLik(x, d, false);
-lik_signedopts = @(x,d) getLogLik(x, d, true);
+%if any(strcmp(which_models, 'WAD')), results_WAD = mfit_optimize_parallel(lik,param_struct,data,nstarts); end
+%if any(strcmp(which_models, 'WP')), results_WP = mfit_optimize_parallel(lik_signedopts,param_struct,data,nstarts); end
 
-if any(strcmp(which_models, 'WAD')), results_WAD = mfit_optimize_parallel(lik,param_struct,data,nstarts); end
-if any(strcmp(which_models, 'WP')), results_WP = mfit_optimize_parallel(lik_signedopts,param_struct,data,nstarts); end
+numModels = length(param_structs);
 
-logpost_EW = zeros(numSubj, 1);
-loglik_EW = zeros(numSubj, 1);
-best_fit_params_EW = zeros(numSubj, length(param_struct_signedweights));
-BICs_EW = zeros(numSubj, 1);
-AICs_EW = zeros(numSubj, 1);
+for m = 1:numModels
+    param_struct = param_structs{m};
+    lik_fn = param_struct(1).lik;
+    numParams = length(param_struct);
 
-logpost_TAL = zeros(numSubj, 1);
-loglik_TAL = zeros(numSubj, 1);
-best_fit_params_TAL = zeros(numSubj, length(param_struct_signedweights));
-BICs_TAL = zeros(numSubj, 1);
-AICs_TAL = zeros(numSubj, 1);
-
-numParams = length(struct);
-
-parfor s = 1:numSubj
-
-    if any(strcmp(which_models, 'EW'))
-        % EW
-        EW_post = @(x) -(lik(x,data(s)) + getPriorSum(x, param_struct_signedweights));
-        [x,logpost] = ga(EW_post, length(param_struct_signedweights),[],[],[],[],vertcat(param_struct_signedweights.lb), ...
-            vertcat(param_struct_signedweights.ub),[],find(vertcat(param_struct_signedweights.int)));
-        best_fit_params_EW(s,:) = x;
-        loglik_EW(s) = lik(x, data(s));
-        logpost_EW(s) = -logpost;
-        BICs_EW(s) = numParams*log(data(s).N) - 2*loglik_EW(s);
-        AICs_EW(s) = numParams*2 - 2*loglik_EW(s);
-    end
-
-    % TAL
-
-    if any(strcmp(which_models, 'TAL'))
-        TAL_post = @(x) -(lik_signedopts(x,data(s)) + getPriorSum(x, param_struct_signedweights));
-        [x,logpost] = ga(TAL_post, length(param_struct_signedweights),[],[],[],[],vertcat(param_struct_signedweights.lb), ...
-            vertcat(param_struct_signedweights.ub),[],find(vertcat(param_struct_signedweights.int)));
-        best_fit_params_TAL(s,:) = x;
-        loglik_TAL(s) = lik_signedopts(x, data(s));
-        logpost_TAL(s) = -logpost;
-        BICs_TAL(s) = numParams*log(data(s).N) - 2*loglik_TAL(s);
-        AICs_TAL(s) = numParams*2 - 2*loglik_TAL(s);
+    %if ~any(vertcat(param_struct.int))
+    if false
+        disp(['Fitting model ', num2str(m),' for all subjects.']);
+        results(m) = mfit_optimize_parallel(lik_fn,param_struct,data,5);
+        disp(['Completed model ', num2str(m),' for all subjects.']);
+    else
+        logposts = zeros(numSubj, 1);
+        logliks = zeros(numSubj, 1);
+        best_fit_params = zeros(numSubj, length(param_struct));
+        BICs = zeros(numSubj, 1);
+        AICs = zeros(numSubj, 1);
+    
+        parfor s = 1:numSubj
+            disp(['Fitting model ', num2str(m),' for subject ', num2str(s)]);
+            
+            post_fn = @(x) -(lik_fn(x,data(s)) + getPriorSum(x, param_struct));
+            [x,logpost] = ga(post_fn, length(param_struct),[],[],[],[],vertcat(param_struct.lb), ...
+                vertcat(param_struct.ub),[],find(vertcat(param_struct.int)), ...
+                optimoptions('ga','UseVectorized', true, ...
+                'MaxStallGenerations', 200, 'MaxGenerations', 5000));
+            best_fit_params(s,:) = x;
+            logliks(s) = lik_fn(x, data(s));
+            logposts(s) = -logpost;
+            BICs(s) = numParams*log(data(s).N) - 2*logliks(s);
+            AICs(s) = numParams*2 - 2*logliks(s);
+    
+            disp(['Completed model ', num2str(m),' for subject ', num2str(s)]);
+        end
+        
+        results(m).K = length(param_struct);
+        results(m).S = numSubj;
+        results(m).H = hessians;
+        results(m).logpost = logposts';
+        results(m).loglik = logliks;
+        results(m).x = best_fit_params;
+        results(m).bic = BICs;
+        results(m).aic = AICs;
+        results(m).likfun = lik_fn;
+        results(m).param = param_struct;
+        results(m).latents = [];
     end
 end
-
-results_EW = results_WAD;
-results_EW.K = numParams;
-results_EW.S = numSubj;
-results_EW.H = hessians;
-results_EW.logpost = logpost_EW';
-results_EW.loglik = loglik_EW;
-results_EW.x = best_fit_params_EW;
-results_EW.bic = BICs_EW;
-results_EW.aic = AICs_EW;
-results_EW.likfun = lik;
-
-results_TAL = results_WP;
-results_TAL.K = numParams;
-results_TAL.S = numSubj;
-results_TAL.H = hessians;
-results_TAL.logpost = logpost_TAL';
-results_TAL.loglik = loglik_TAL;
-results_TAL.x = best_fit_params_TAL;
-results_TAL.bic = BICs_TAL;
-results_TAL.aic = AICs_TAL;
-results_TAL.likfun = lik_signedopts;
 
 end

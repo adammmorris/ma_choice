@@ -1,9 +1,9 @@
-function [choices] = makeChoice(parameters, options, avail_atts)
+function [choices] = makeChoice(parameters, options, avail_atts, sign_optionvals)
 
 % parameters: [invTemp weights steps sign]
 % options: numAtt x numOptionsPerChoice x numChoices
 % avail_atts: numChoices x numAtt (logicals)
-
+options = signOptions(options, sign_optionvals, false);
 options_dim = size(options);
 numAtts = options_dim(1);
 numChoices = options_dim(3);

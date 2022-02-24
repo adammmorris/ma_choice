@@ -1,105 +1,120 @@
 %% setup
 clear
-datapath = '../data/v2/pilot2/';
+datapath = '../data/v3_nosteps/real1/';
 
 addpath("mfit/");
 load(strcat(datapath, 'imported_data.mat'));
+load('param_structs.mat');
 
-param(1).name = 'inverse temperature';
-param(1).logpdf = @(x) sum(log(gampdf(x,1,5)));  % log density function for prior
-%param(1).logpdf = @(x) 0;
-param(1).lb = 0;    % lower bound
-param(1).ub = 50;   % upper bound
+%% fit
+models_to_fit = 1:5;
+version = '';
 
-for i = 1:numAtts
-    param(i+1).name = strcat('weight',string(i));
-    param(i+1).logpdf = @(x) sum(log(normpdf(x,0,1)));  % log density function for prior
-    %param(i+1).logpdf = @(x) 0;
-    param(i+1).lb = -5;    % lower bound
-    param(i+1).ub = 5;   % upper bound
+results = fitModels(param_structs(models_to_fit), data_real_scaled);
+save(strcat(datapath, 'fitting_results', version, '.mat'), 'results');
+
+for i = 1:length(models_to_fit)
+    writematrix(results(i).x(:,2:end), strcat(datapath, 'fitted_empirical_weights_', model_names{models_to_fit(i)} ,'.csv'))
+    writematrix(results(i).x(:,1), strcat(datapath, 'fitted_empirical_temps_', model_names{models_to_fit(i)} ,'.csv'))
 end
 
-nstarts = 5;
+%% do cross-validation
 
-[results_WAD, results_WP, results_EW, results_TAL] = ...
-    fitModels(param, data_real, nstarts, numAtts);
-
-results_all = [results_WAD, results_WP, results_EW, results_TAL];
-writematrix(results_WAD.x(:,2:end), strcat(datapath, 'fitted_empirical_weights_WAD.csv'))
-writematrix(results_WP.x(:,2:end), strcat(datapath, 'fitted_empirical_weights_WP.csv'))
-writematrix(results_EW.x(:,2:end), strcat(datapath, 'fitted_empirical_weights_EW.csv'))
-writematrix(results_TAL.x(:,2:end), strcat(datapath, 'fitted_empirical_weights_TAL.csv'))
-
-% do bayesian model selection
-bms_results = mfit_bms(results_all, 1);
-bms_results.pxp
-
-[results_WAD.bic results_WP.bic results_EW.bic results_TAL.bic]
-
-% do cross-validation
-
-numFolds = 5;
-numModels = 4;
+numFolds = 10;
+numModels = length(models_to_fit);
 
 for subj = 1:numSubj
-    numChoices_cur = data_real(subj).N;
-    numTrainTrials = ceil(numChoices_cur - numChoices_cur / numFolds);
-    numTestTrials = floor(numChoices_cur / numFolds);
-    choices_shuffled = 1:numChoices_cur;
-    choices_shuffled = choices_shuffled(randperm(length(choices_shuffled)));
+    subj_cv_info(subj).numChoices = data_real_scaled(subj).N;
+    subj_cv_info(subj).numTrainTrials = ceil(subj_cv_info(subj).numChoices - subj_cv_info(subj).numChoices / numFolds);
+    subj_cv_info(subj).numTestTrials = floor(subj_cv_info(subj).numChoices / numFolds);
+    subj_cv_info(subj).choices_unshuffled = 1:subj_cv_info(subj).numChoices;
+    subj_cv_info(subj).choices_shuffled = subj_cv_info(subj).choices_unshuffled(randperm(subj_cv_info(subj).numChoices));
+end
 
-    for i = 1:numFolds
-        test_trials = choices_shuffled((numTestTrials*(i-1)+1):(numTestTrials*i));
-        train_trials = choices_shuffled;
+for i = 1:numFolds
+    traindata = struct();
+    testdata = struct();
+
+    for subj = 1:numSubj
+        test_trials = subj_cv_info(subj).choices_shuffled((subj_cv_info(subj).numTestTrials*(i-1)+1):(subj_cv_info(subj).numTestTrials*i));
+        train_trials = subj_cv_info(subj).choices_unshuffled;
         train_trials(test_trials) = [];
 
-        traindata(subj).N = numTrainTrials;
-        traindata(subj).options = data_real(subj).options(:,:,train_trials);
-        traindata(subj).avail_atts = data_real(subj).avail_atts(train_trials,:);
-        traindata(subj).choices = data_real(subj).choices(train_trials,:);
+        traindata(subj).N = subj_cv_info(subj).numTrainTrials;
+        traindata(subj).options = data_real_scaled(subj).options(:,:,train_trials);
+        traindata(subj).avail_atts = data_real_scaled(subj).avail_atts(train_trials,:);
+        traindata(subj).choices = data_real_scaled(subj).choices(train_trials,:);
 
-        testdata(subj).N = numTestTrials;
-        testdata(subj).options = data_real(subj).options(:,:,test_trials);
-        testdata(subj).avail_atts = data_real(subj).avail_atts(test_trials,:);
-        testdata(subj).choices = data_real(subj).choices(test_trials,:);
-
-        folds(i).traindata = traindata;
-        folds(i).testdata = testdata;
+        testdata(subj).N = subj_cv_info(subj).numTestTrials;
+        testdata(subj).options = data_real_scaled(subj).options(:,:,test_trials);
+        testdata(subj).avail_atts = data_real_scaled(subj).avail_atts(test_trials,:);
+        testdata(subj).choices = data_real_scaled(subj).choices(test_trials,:);
     end
+
+    folds(i).traindata = traindata;
+    folds(i).testdata = testdata;
 end
 
 cv_results = zeros(numSubj, numModels, numFolds);
+results_train = cell(numFolds);
 for i = 1:numFolds
-    [results_WAD_train, results_WP_train, results_EW_train, results_TAL_train] = ...
-        fitModels(param, folds(i).traindata, nstarts, numAtts);
-    results_all_train = [results_WAD_train, results_WP_train, results_EW_train, results_TAL_train];
-    [results_WAD_test, results_WP_test, results_EW_test, results_TAL_test] = ...
-        crossValidateModels(folds(i).testdata, results_all_train);
-    results_all_test = [results_WAD_test, results_WP_test, results_EW_test, results_TAL_test];
-
-    cv_results(:,:,i) = results_all_test;
+    results_train{i} = fitModels(param_structs(models_to_fit), folds(i).traindata);
+    cv_results(:,:,i) = crossValidateModels(folds(i).testdata, results_train{i});
 end
+
+% debugging
+% traindata_debug = folds(2).traindata(14);
+% testdata_debug = folds(2).testdata(14);
+% results_train_debug = fitModels(param_structs(3), traindata_debug);
+% results_test_debug = crossValidateModels(testdata_debug, results_train_debug);
+%  
 
 cv_results_avg = mean(cv_results,3);
 mean(mean(cv_results,3))
 median(mean(cv_results,3))
 
 best_model = zeros(numSubj, 1);
+worst_model = zeros(numSubj, 1);
 for i = 1:numSubj
     [~, best_model(i)] = max(cv_results_avg(i,:));
+    [~, worst_model(i)] = min(cv_results_avg(i,:));
+    %best_model(i) = find(abs(cv_results_avg(i,:) - cv_results_avg(i,best_model(i))) < 1e-8,1,'last');
 end
 graphCV(cv_results_avg, [1 3]);
 
 hist(best_model)
+hist(worst_model)
 
-save(strcat(datapath,'fit_empirical.mat'));
+save(strcat(datapath,'cv_results', version, '.mat'));
 
 %% normalize
-chance = log(.5 ^ 15);
 cv_results_normalized = zeros(numSubj, numModels);
-for i = 1:numSubj
-    best = cv_results_avg(i,best_model(i));
-    cv_results_normalized(i,:) = (cv_results_avg(i,:) - chance) / (best - chance);
+cv_results_best = zeros(numSubj, 5);
+cv_results_nonnormalized = zeros(numSubj, numModels);
+for subj = 1:numSubj
+    best = cv_results_avg(subj,best_model(subj));
+    worst = cv_results_avg(subj,worst_model(subj));
+    numTestTrials = subj_cv_info(subj).numTestTrials;
+    best_exp = exp(best / numTestTrials);
+    worst_exp = exp(worst / numTestTrials);
+    chance = log(.5 ^ numTestTrials);
+    %cv_results_normalized(subj,:) = (cv_results_avg(subj,:) - chance) / (best - chance);
+    %cv_results_normalized(subj,:) = best ./ cv_results_avg(subj,:);
+    cv_results_nonnormalized(subj,:) = exp(cv_results_avg(subj,:) / numTestTrials); 
+    cv_results_normalized(subj,:) = (exp(cv_results_avg(subj,:) / numTestTrials) - worst_exp) / (best_exp - worst_exp); 
+    cv_results_best(subj,:) = [best, best < chance, best_exp, exp(chance / numTestTrials), numTestTrials];
 end
 
-writematrix(cv_results_normalized, strcat(datapath, 'cv_results.csv'))
+writematrix(cv_results_nonnormalized, strcat(datapath, 'cv_results', version, '.csv'));
+writematrix(cv_results_normalized, strcat(datapath, 'cv_results_normalized', version, '.csv'));
+writematrix(cv_results_best, strcat(datapath, 'cv_results_best', version, '.csv'));
+
+%% do rounded
+% switch getLogLik first.. janky, I know
+
+cv_results_rounded = zeros(numSubj, numModels, numFolds);
+for i = 1:numFolds
+   cv_results_rounded(:,:,i) = crossValidateModels(folds(i).testdata, results_train{i});
+end
+cv_results_rounded_avg = mean(cv_results_rounded, 3);
+writematrix(cv_results_rounded_avg, strcat(datapath, 'cv_results_rounded', version, '.csv'));
