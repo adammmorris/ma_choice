@@ -17,6 +17,7 @@
 import scipy.io
 from scipy.stats import norm
 from scipy.stats import gamma
+import time
 import numpy as np
 import matplotlib.pyplot as plt
 from geneticalgorithm import geneticalgorithm as ga
@@ -93,7 +94,7 @@ def getPriorsum(params, param_struct):
     gamma_bounds = np.array([[1., 5.]])
     for i in range(0, len(param_struct)):
         if i == 0:
-            logpdf = lambda x: np.sum(np.log(gamma.pdf(x, gamma_bounds[0][0], gamma_bounds[0][1])))
+            logpdf = lambda x: np.sum(np.log(gamma.pdf(x, gamma_bounds[0][0], scale = gamma_bounds[0][1])))
         else:
             logpdf = lambda x: np.sum(np.log(norm.pdf(x, weight_params[0][0], weight_params[0][1])))
         priorsum = priorsum + logpdf(params[i])
@@ -118,7 +119,7 @@ def fitWAD(param_struct, data):
     AICs_WAD = np.zeros((numSubj, 1))
 
     # loop through each subject-- will check parallel loop later
-    for s in range(0, numSubj):
+    for s in range(0, 1):
         print('Fitting WAD for subject ' + str(s))
 
         # our posterior (the log likelihood + the log prior)
@@ -149,20 +150,51 @@ def fitWAD(param_struct, data):
         vartype = np.array(arr)
 
         # run model
-        model = ga(function=WAD_post,
-                   dimension=len(param_struct[0]),
-                   variable_boundaries=varbound,
-                   variable_type_mixed=vartype)
-        model.run()
-        x = model.output_dict['variable']
-        logpost = model.output_dict['function']
+
+        # simulated annealing global optimization for a multimodal objective function
+        from scipy.optimize import dual_annealing
+
+        # objective function
+        def objective(v):
+            x, y = v
+            return (x ** 2 + y - 11) ** 2 + (x + y ** 2 - 7) ** 2
+
+        # define range for input
+        r_min, r_max = -5.0, 5.0
+        # define the bounds on the search
+        bounds = [[r_min, r_max], [r_min, r_max]]
+        # perform the simulated annealing search
+        result = dual_annealing(WAD_post, varbound)
+        # summarize the result
+        print('Status : %s' % result['message'])
+        print('Total Evaluations: %d' % result['nfev'])
+        # evaluate solution
+        solution = result['x']
+        #evaluation = objective(solution)
+        #print('Solution: f(%s) = %.5f' % (solution, evaluation))
+        #scipy optimize
+        #from scipy.optimize import Bounds
+        #bounds = Bounds(varbound)
+        #from scipy.optimize import LinearConstraint
+        #linear_constraint = LinearConstraint() #not needed for WAD
+        # res = minimize(rosen, x0, method='trust-constr', jac=rosen_der, hess=rosen_hess,
+        #                constraints=[linear_constraint, nonlinear_constraint],
+        #                options={'verbose': 1}, bounds=bounds)
+        #genetic-algorithm
+        #model = ga(function=WAD_post,
+        #           dimension=len(param_struct[0]),
+        #           variable_boundaries=varbound,
+        #           variable_type_mixed=vartype)
+        #model.run()
+        #x = model.output_dict['variable']
+        #logpost = model.output_dict['function']
 
         # store best fit params
-        best_fit_params_WAD[s, :] = x
+        #best_fit_params_WAD[s, :] = x
         # store the maximum likelihood
-        loglik_WAD[s] = lik(x, data[0][s])
+        #loglik_WAD[s] = lik(x, data[0][s])
         # store the maximum posterior
-        logpost_WAD[s] = -logpost
+        #logpost_WAD[s] = -logpost
         # store the BIC and AIC
         temp = np.array([2])
         nump = np.array([numParams])
@@ -186,3 +218,8 @@ def fitWAD(param_struct, data):
 
 if __name__ == '__main__':
     results_WAD = fitWAD(param_struct, data_WAD)
+    print(np.corrcoef(params_WAD[0, :], result_WAD[0, :]))
+    print(np.corrcoef(params_WAD[1, :], result_WAD[1, :]))
+    print(np.corrcoef(params_WAD[2, :], result_WAD[2, :]))
+    print(np.corrcoef(params_WAD[3, :], result_WAD[3, :]))
+    print(np.corrcoef(params_WAD[4, :], result_WAD[4, :]))
